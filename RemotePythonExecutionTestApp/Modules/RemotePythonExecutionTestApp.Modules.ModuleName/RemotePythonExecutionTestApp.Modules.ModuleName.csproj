@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Prism.Wpf" Version="8.1.97" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\RemotePythonExecutionTestApp.Core\RemotePythonExecutionTestApp.Core.csproj" />
+    <ProjectReference Include="..\..\Services\RemotePythonExecutionTestApp.Services.Interfaces\RemotePythonExecutionTestApp.Services.Interfaces.csproj" />
+  </ItemGroup>
+</Project>
