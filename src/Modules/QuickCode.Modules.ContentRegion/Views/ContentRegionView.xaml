@@ -1,0 +1,96 @@
+﻿<UserControl x:Class="QuickCode.Modules.ContentRegion.Views.ContentRegionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:QuickCode.Modules.ContentRegion.Views"
+             xmlns:prism="http://prismlibrary.com/" 
+             prism:ViewModelLocator.AutoWireViewModel="True" >
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" >
+            
+            <Button Grid.Row="0"
+                Width="100"
+                Height="20"
+                Margin="20 0 10 0"
+                HorizontalAlignment="Left"
+                Content="Start" 
+                Command="{Binding StartCommand}"/>
+
+            <Button Grid.Row="0"
+                Width="100"
+                Height="20"
+                Margin="10 0 10 0"
+                HorizontalAlignment="Left"
+                Content="Stop" 
+                Command="{Binding StopCommand}"/>
+
+            <Button Grid.Row="0"
+                Width="40"
+                Height="20"
+                Margin="10 0 10 0"
+                HorizontalAlignment="Left"
+                Content="next" 
+                Command="{Binding SendDebuggerCommand}"
+                CommandParameter="n" />
+
+            <Button Grid.Row="0"
+                Width="40"
+                Height="20"
+                Margin="10 0 10 0"
+                HorizontalAlignment="Left"
+                Content="llist" 
+                Command="{Binding SendDebuggerCommand}"
+                CommandParameter="ll"/>
+
+            <Button Grid.Row="0"
+                    Width="40"
+                    Height="20"
+                    Margin="10 0 10 0"
+                    HorizontalAlignment="Left"
+                    Content="restart" 
+                    Command="{Binding SendDebuggerCommand}"
+                    CommandParameter="restart"/>
+
+            <Button Grid.Row="0"
+                    Width="40"
+                    Height="20"
+                    Margin="10 0 10 0"
+                    HorizontalAlignment="Left"
+                    Content="quit" 
+                    Command="{Binding SendDebuggerCommand}"
+                    CommandParameter="restart"/>
+
+        </StackPanel>
+
+        <TextBox Grid.Row="1"
+                 Grid.Column="0"
+                 Margin="10"
+                 FontSize="18"
+                 Text="{Binding SourceCode, UpdateSourceTrigger=PropertyChanged}"
+                 
+                 HorizontalAlignment="Stretch"
+                 VerticalAlignment="Stretch"
+                 HorizontalContentAlignment="Left"
+                 VerticalContentAlignment="Top"
+                 
+                  TextWrapping="Wrap"
+                  AcceptsReturn="True"
+                  VerticalScrollBarVisibility="Auto"/>
+
+        <TextBox x:Name="ExecutionResultEditor"
+                 Grid.Row="1"
+                 Grid.Column="1"
+                 Margin="10"
+                 FontSize="12"
+                 Text="{Binding ExecutionResult, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+    </Grid>
+</UserControl>

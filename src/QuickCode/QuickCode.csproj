@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Prism.DryIoc" Version="8.1.97" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Modules\QuickCode.Modules.ContentRegion\QuickCode.Modules.ContentRegion.csproj" />
+    <ProjectReference Include="..\QuickCode.Core\QuickCode.Core.csproj" />
+    <ProjectReference Include="..\Services\QuickCode.Services.Interfaces\QuickCode.Services.Interfaces.csproj" />
+    <ProjectReference Include="..\Services\QuickCode.Services\QuickCode.Services.csproj" />
+  </ItemGroup>
+</Project>

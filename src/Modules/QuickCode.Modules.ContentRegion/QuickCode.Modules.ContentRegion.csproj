@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Prism.Wpf" Version="8.1.97" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\QuickCode.Core\QuickCode.Core.csproj" />
+    <ProjectReference Include="..\..\Services\QuickCode.Services.Interfaces\QuickCode.Services.Interfaces.csproj" />
+  </ItemGroup>
+</Project>
