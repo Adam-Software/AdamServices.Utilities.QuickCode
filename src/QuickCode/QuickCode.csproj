@@ -3,6 +3,12 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <Version>0.0.1</Version>
+    <Authors>vertigra</Authors>
+    <DebugType>embedded</DebugType>
+    <Product>$(SolutionName)</Product>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Prism.DryIoc" Version="8.1.97" />
