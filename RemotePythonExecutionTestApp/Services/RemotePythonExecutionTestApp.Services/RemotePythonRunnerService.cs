@@ -2,7 +2,10 @@
 using Microsoft.Extensions.Logging;
 using PHS.Networking.Enums;
 using RemotePythonExecutionTestApp.Services.Interfaces;
+using RemotePythonExecutionTestApp.Services.Interfaces.JsonModel;
 using System;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Tcp.NET.Client;
 using Tcp.NET.Client.Events.Args;
 using Tcp.NET.Client.Models;
@@ -11,9 +14,11 @@ namespace RemotePythonExecutionTestApp.Services
 {
     public class RemotePythonRunnerService : IRemotePythonRunnerService
     {
+        public event DataReceivedEventHandler RaiseDataReceivedEvent;
+
         #region Services
 
-        private ILogger<RemotePythonRunnerService> mLogger;
+        private readonly ILogger<RemotePythonRunnerService> mLogger;
 
         #endregion
 
@@ -29,9 +34,8 @@ namespace RemotePythonExecutionTestApp.Services
         {
             mLogger = serviceProvider.GetService<ILogger<RemotePythonRunnerService>>();
 
-            mTcpClient = new TcpNETClient(new ParamsTcpClient("127.0.0.1", 18000, "\r\n"));
+            mTcpClient = new TcpNETClient(new ParamsTcpClient("localhost", 19000, "\r\n", isSSL:false));
             
-
             Subscribe();
             mLogger.LogInformation("Load RemotePythonRunnerService ~");
         }
@@ -58,7 +62,12 @@ namespace RemotePythonExecutionTestApp.Services
 
         private void MessageEvent(object sender, TcpMessageClientEventArgs args)
         {
-            throw new NotImplementedException();
+            var messageEvent = args.MessageEventType;
+            
+            if(messageEvent == MessageEventType.Receive)
+            {
+                OnRaiseClientDataReceivedEvent(args.Message);
+            }
         }
 
         private void ConnectionEvent(object sender, TcpConnectionClientEventArgs args)
@@ -86,21 +95,57 @@ namespace RemotePythonExecutionTestApp.Services
 
         #region Public fields
 
-
-
         #endregion
 
         #region Public methods
 
-        public void ConnectAsync()
+        public async Task ConnectAndSendCodeAsync(string sourceCode)
         {
-            mTcpClient.ConnectAsync();
+            var result = await mTcpClient.ConnectAsync();
+          
+            if (result)
+            {
+                ReceivedMessage receivedMessage = new()
+                {
+                    MessageType = "debug_source_code",
+                    Code = sourceCode
+                };
+
+                var message = JsonSerializer.Serialize(receivedMessage);
+                var sendResult = await mTcpClient.SendAsync(message);
+
+                mLogger.LogInformation("Send message result: {result}", sendResult);
+            }
         }
 
-        public void SendCode(string sourceCode)
+        public async Task SendСontrolCharacter(string controlCharacter)
         {
-            mTcpClient.SendAsync(sourceCode);
-            //return "Hello from the Message Service";
+            ReceivedMessage receivedMessage = new()
+            {
+                MessageType = "control_characters",
+                ControlCharacters = controlCharacter
+            };
+
+            var message = JsonSerializer.Serialize(receivedMessage);
+            var result = await mTcpClient.SendAsync(message);
+
+            mLogger.LogInformation("Send control_characters result: {result}", result);
+        }
+
+        public async Task DisconnectAsync()
+        {
+            await mTcpClient.DisconnectAsync();
+        }
+
+        #endregion
+
+        #region RaiseEvent
+
+        protected virtual void OnRaiseClientDataReceivedEvent(string data)
+        {
+            var raiseEvent = RaiseDataReceivedEvent;
+            raiseEvent?.Invoke(this, data);
+
         }
 
         #endregion

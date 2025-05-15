@@ -4,6 +4,10 @@ using Prism.Regions;
 using RemotePythonExecutionTestApp.Core.Mvvm;
 using RemotePythonExecutionTestApp.Services.Interfaces;
 using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Windows;
+using System.Windows.Threading;
 
 namespace RemotePythonExecutionTestApp.Modules.ModuleName.ViewModels
 {
@@ -12,8 +16,9 @@ namespace RemotePythonExecutionTestApp.Modules.ModuleName.ViewModels
 
         #region DelegateCommand
 
-        public DelegateCommand ConnectCommand { get; }
-        public DelegateCommand InterpretCommand { get; }
+        public DelegateCommand StartCommand { get; }
+        public DelegateCommand StopCommand { get; }
+        public DelegateCommand<object> SendDebuggerCommand { get; }
 
         #endregion
 
@@ -24,6 +29,11 @@ namespace RemotePythonExecutionTestApp.Modules.ModuleName.ViewModels
 
         #endregion
 
+        #region Var
+
+        private bool mIsExecutionStop = false;
+
+        #endregion
 
         #region ~
 
@@ -32,8 +42,25 @@ namespace RemotePythonExecutionTestApp.Modules.ModuleName.ViewModels
             mLogger = logger;
             mRemotePythonRunner = remotePythonRunner;
 
-            ConnectCommand = new DelegateCommand(Connect, ConnectCanExecute);
-            InterpretCommand = new DelegateCommand(Interpret, InterpretCanExecute);
+            StartCommand = new DelegateCommand(Start, StartCanExecute);
+            StopCommand = new DelegateCommand(Stop, StopCanExecute);
+            SendDebuggerCommand = new DelegateCommand<object>(SendDebugger, SendDebuggerCanExecute);
+
+            Subscribe();
+        }
+
+        #endregion
+
+        #region Subscribe/Unsubscribe
+
+        private void Subscribe()
+        {
+            mRemotePythonRunner.RaiseDataReceivedEvent += RaiseDataReceivedEvent;
+        }
+
+        private void Unsubscribe()
+        {
+            mRemotePythonRunner.RaiseDataReceivedEvent -= RaiseDataReceivedEvent;
         }
 
         #endregion
@@ -41,6 +68,19 @@ namespace RemotePythonExecutionTestApp.Modules.ModuleName.ViewModels
         #region Navigation
 
         public override void OnNavigatedTo(NavigationContext navigationContext) {}
+
+        #endregion
+
+        #region Events
+
+        private void RaiseDataReceivedEvent(object sender, string data)
+        {
+            Application.Current?.Dispatcher?.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+            {
+                if(ExecutionResult != null && !mIsExecutionStop)
+                    ExecutionResult = ExecutionResult + $"{data}\n";
+            }));
+        }
 
         #endregion
 
@@ -55,7 +95,17 @@ namespace RemotePythonExecutionTestApp.Modules.ModuleName.ViewModels
                 var isNewValue= SetProperty(ref mSourceCode, value);
 
                 if (isNewValue)
-                    InterpretCommand.RaiseCanExecuteChanged();
+                    StartCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        private string mExecutionResult = "";
+        public string ExecutionResult
+        {
+            get { return mExecutionResult; }
+            set
+            {
+                SetProperty(ref mExecutionResult, value);
             }
         }
 
@@ -64,25 +114,39 @@ namespace RemotePythonExecutionTestApp.Modules.ModuleName.ViewModels
 
         #region DelegateCommand methods
 
-        private void Connect()
+        private void Start()
         {
-            mRemotePythonRunner.ConnectAsync();
+            mExecutionResult = "";
+            var sourceCode = SourceCode;
+            mRemotePythonRunner.ConnectAndSendCodeAsync(sourceCode);
+            mIsExecutionStop = false;
         }
 
-        private bool ConnectCanExecute()
+        private bool StartCanExecute()
+        {
+            return !string.IsNullOrEmpty(SourceCode);
+        }
+
+        private void Stop()
+        {
+            mRemotePythonRunner.DisconnectAsync();
+            mIsExecutionStop= true; 
+        }
+
+        private bool StopCanExecute()
         {
             return true;
         }
 
-        private void Interpret()
+        private void SendDebugger(object commandParam)
         {
-            var sourceCode = SourceCode;
-            mRemotePythonRunner.SendCode(sourceCode);
+            var command = commandParam as string;
+            mRemotePythonRunner.SendСontrolCharacter(command);
         }
 
-        private bool InterpretCanExecute()
+        private bool SendDebuggerCanExecute(object arg)
         {
-            return !string.IsNullOrEmpty(SourceCode);
+            return true;
         }
 
         #endregion
