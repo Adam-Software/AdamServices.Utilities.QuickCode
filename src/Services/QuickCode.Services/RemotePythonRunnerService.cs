@@ -34,7 +34,7 @@ namespace QuickCode.Services
         {
             mLogger = serviceProvider.GetService<ILogger<RemotePythonRunnerService>>();
 
-            mTcpClient = new TcpNETClient(new ParamsTcpClient("localhost", 19000, "\r\n", isSSL:false));
+            mTcpClient = new TcpNETClient(new ParamsTcpClient("10.254.254.230", 19000, "\r\n", isSSL:false));
             
             Subscribe();
             mLogger.LogInformation("Load RemotePythonRunnerService ~");
@@ -99,15 +99,20 @@ namespace QuickCode.Services
 
         #region Public methods
 
-        public async Task ConnectAndSendCodeAsync(string sourceCode)
+        public async Task ConnectAndSendCodeAsync(string sourceCode, bool withDebug = false)
         {
+            var messageType = "source_code";
+
+            if (withDebug)
+                messageType = "debug_source_code";
+
             var result = await mTcpClient.ConnectAsync();
           
             if (result)
             {
                 ReceivedMessage receivedMessage = new()
                 {
-                    MessageType = "debug_source_code",
+                    MessageType = messageType,
                     Code = sourceCode
                 };
 
@@ -132,8 +137,14 @@ namespace QuickCode.Services
             mLogger.LogInformation("Send control_characters result: {result}", result);
         }
 
-        public async Task DisconnectAsync()
+        public async Task DisconnectAsync(bool withDebug = false)
         {
+            if (withDebug)
+            {
+                await SendСontrolCharacter("q");
+                return;
+            }
+
             await mTcpClient.DisconnectAsync();
         }
 

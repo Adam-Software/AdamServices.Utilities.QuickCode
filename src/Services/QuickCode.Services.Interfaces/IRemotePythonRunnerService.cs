@@ -12,7 +12,7 @@ namespace QuickCode.Services.Interfaces
     {
         public event DataReceivedEventHandler RaiseDataReceivedEvent;
         public Task SendСontrolCharacter(string controlCharacter);
-        public Task ConnectAndSendCodeAsync(string sourceCode);
-        public Task DisconnectAsync();
+        public Task ConnectAndSendCodeAsync(string sourceCode, bool withDebug = false);
+        public Task DisconnectAsync(bool withDebug = false);
     }
 }

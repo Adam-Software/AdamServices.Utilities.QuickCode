@@ -5,6 +5,7 @@ using QuickCode.Core.Mvvm;
 using QuickCode.Services.Interfaces;
 using System;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Threading;
 
 namespace QuickCode.Modules.ContentRegion.ViewModels
@@ -106,6 +107,16 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             }
         }
 
+        public bool mEnableDebug = false;
+        public bool EnableDebug
+        {
+            get { return mEnableDebug; }
+            set
+            {
+                SetProperty(ref mEnableDebug, value);
+            }
+        }
+
         #endregion
 
         #region DelegateCommand methods
@@ -114,7 +125,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
         {
             mExecutionResult = "";
             var sourceCode = SourceCode;
-            mRemotePythonRunner.ConnectAndSendCodeAsync(sourceCode);
+            mRemotePythonRunner.ConnectAndSendCodeAsync(sourceCode, EnableDebug);
             mIsExecutionStop = false;
         }
 
@@ -125,7 +136,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private void Stop()
         {
-            mRemotePythonRunner.DisconnectAsync();
+            mRemotePythonRunner.DisconnectAsync(EnableDebug);
             mIsExecutionStop= true; 
         }
 
