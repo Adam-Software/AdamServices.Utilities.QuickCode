@@ -97,7 +97,7 @@ jobs:
       with:
         files: c:\output\
         recursive: true
-        dest: "${{ env.PROJECT_NAME }}.portable.zip"
+        dest: "QuickCode.portable.zip"
 
     - name: Publish Release
       uses: "slord399/action-automatic-releases@v1.0.1"
