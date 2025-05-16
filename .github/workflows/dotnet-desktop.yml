@@ -83,10 +83,14 @@ jobs:
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
-      run: msbuild $env:Solution_Name /t:Build /p:OutDir=c:\output\ /p:Configuration=$env:configuration
+      run: msbuild $env:Solution_Name /t:Restore /p:OutDir=c:\output\ /p:Configuration=$env:configuration
       env:
         Configuration: ${{ matrix.configuration }}
 
+    - name: Build the application
+      run: msbuild $env:Solution_Name /t:Build /p:OutDir=c:\output\ /p:Configuration=$env:configuration
+      env:
+        Configuration: ${{ matrix.configuration }}
         
 
     # Decode the base 64 encoded pfx and save the Signing_Certificate
