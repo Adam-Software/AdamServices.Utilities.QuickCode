@@ -62,7 +62,7 @@ jobs:
         # Base path for archive files
         path: "${{ env.OUTPUT_PATH }}" # optional, default is .
         # Working directory before zipping
-        #directory: # optional, default is . 
+        directory: "${{ env.OUTPUT_PATH }}" # optional, default is . 
         # List of excluded files / directories
         #exclusions: # optional, default is 
         # List of excluded files / directories with recursive wildcards (only applies on Windows with `zip` type)
@@ -78,7 +78,7 @@ jobs:
     - name: Publish Release
       uses: "slord399/action-automatic-releases@v1.0.1"
       with:
-        title: "Release v.1"
+        title: "Release v.${{ env.VERSION }}"
         repo_token: "${{ env.GITHUB_TOKEN }}"
         automatic_release_tag: "v.${{ env.VERSION }}"
         prerelease: false
