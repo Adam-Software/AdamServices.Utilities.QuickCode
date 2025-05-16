@@ -34,7 +34,7 @@ namespace QuickCode.Services
         {
             mLogger = serviceProvider.GetService<ILogger<RemotePythonRunnerService>>();
 
-            mTcpClient = new TcpNETClient(new ParamsTcpClient("10.254.254.230", 19000, "\r\n", isSSL:false));
+            mTcpClient = new TcpNETClient(new ParamsTcpClient("localhost", 19000, "\r\n", isSSL:false));
             
             Subscribe();
             mLogger.LogInformation("Load RemotePythonRunnerService ~");
