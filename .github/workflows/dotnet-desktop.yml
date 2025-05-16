@@ -96,7 +96,7 @@ jobs:
     - name: Zip arm64 release
       uses: vimtor/action-zip@v1.2
       with:
-        files: c:\output\
+        files: output/
         recursive: true
         dest: "QuickCode.portable.zip"
 
