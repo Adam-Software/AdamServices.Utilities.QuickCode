@@ -91,6 +91,23 @@ jobs:
       run: msbuild $env:Solution_Name /t:Build /p:OutDir=c:\output\ /p:Configuration=$env:configuration
       env:
         Configuration: ${{ matrix.configuration }}
+
+    - name: Zip arm64 release
+      uses: vimtor/action-zip@v1.2
+      with:
+        files: c:\output\
+        recursive: true
+        dest: "${{ env.PROJECT_NAME }}.portable.zip"
+
+    - name: Publish Release
+      uses: "slord399/action-automatic-releases@v1.0.1"
+      with:
+        title: "Release v.1"
+        repo_token: "${{ env.GITHUB_TOKEN }}"
+        automatic_release_tag: "v.1"
+        prerelease: false
+        files: |
+            *.zip   
         
 
     # Decode the base 64 encoded pfx and save the Signing_Certificate
