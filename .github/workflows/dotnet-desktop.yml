@@ -31,7 +31,7 @@ jobs:
       #env:
       #  TAG: ${{ github.ref_name }}
       run: | 
-        echo "${{ github.ref_name }}" -replace '#v.#', ''
+        echo '"${{ github.ref_name }}" -replace '#v.#', '''
         echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
         echo "Tag name from github.ref_name: ${{  github.ref_name }}"
       #run: echo "VERSION=${TAG#v.#}" > $GITHUB_ENV
