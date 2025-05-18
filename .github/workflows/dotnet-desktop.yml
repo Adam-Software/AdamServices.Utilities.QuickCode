@@ -31,9 +31,9 @@ jobs:
       env:
         TAG: ${{ github.ref_name }}
       run: | 
-        $VERSION = "${TAG}" -replace '#v.#', ''
-        echo "${ TAG }"
-        echo "${ VERSION }"
+        $VERSION = "${{ TAG }}" -replace '#v.#', ''
+        echo "${{ TAG }}"
+        echo "${{ VERSION }}"
       #run: echo "VERSION=${TAG#v.#}" > $GITHUB_ENV
       
     # Install the .NET Core workload
