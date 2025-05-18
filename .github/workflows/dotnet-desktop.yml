@@ -13,9 +13,9 @@ env:
     
 jobs:
   build:
-    strategy:
-      matrix:
-        configuration: [Release]
+    #strategy:
+    #  matrix:
+    #    configuration: [Release]
 
     runs-on: windows-latest  # For a list of available runner types, refer to
                              # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
@@ -23,8 +23,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      #with:
+      #  fetch-depth: 0
 
     - name: Set Version Variable
       if: ${{ github.ref_type == 'tag' }}
@@ -44,14 +44,14 @@ jobs:
       
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
-      run: msbuild $env:SOLUTION_NAME /t:Restore /p:OutDir=$env:OUTPUT_PATH /p:Configuration=$env:configuration
-      env:
-        Configuration: ${{ matrix.configuration }}
+      run: msbuild $env:SOLUTION_NAME /t:Restore /p:OutDir=$env:OUTPUT_PATH /p:Configuration=Release
+      #env:
+      #  Configuration: ${{ matrix.configuration }}
 
     - name: Build the application
-      run: msbuild $env:SOLUTION_NAME /t:Build /p:OutDir=$env:OUTPUT_PATH /p:Configuration=$env:configuration
-      env:
-        Configuration: ${{ matrix.configuration }}
+      run: msbuild $env:SOLUTION_NAME /t:Build /p:OutDir=$env:OUTPUT_PATH /p:Configuration=$env:Release
+      #env:
+      #  Configuration: ${{ matrix.configuration }}
 
     - name: Zip release
       uses: TheDoctor0/zip-release@0.7.6
