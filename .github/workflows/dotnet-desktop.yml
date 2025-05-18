@@ -49,7 +49,7 @@ jobs:
       #  Configuration: ${{ matrix.configuration }}
 
     - name: Build the application
-      run: msbuild $env:SOLUTION_NAME /t:Build /p:OutDir=$env:OUTPUT_PATH /p:Configuration=$env:Release
+      run: msbuild $env:SOLUTION_NAME /t:Build /p:OutDir=$env:OUTPUT_PATH /p:Configuration=Release
       #env:
       #  Configuration: ${{ matrix.configuration }}
 
