@@ -30,7 +30,7 @@ jobs:
       if: ${{ github.ref_type == 'tag' }}
       env:
         TAG: ${{ github.ref_name }}
-      run: echo "VERSION=${TAG#v.}" > $GITHUB_ENV
+      run: echo "VERSION=${TAG#v.#}" > $GITHUB_ENV
       
     # Install the .NET Core workload
     - name: Install .NET Core
