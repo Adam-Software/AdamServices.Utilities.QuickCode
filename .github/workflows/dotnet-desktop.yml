@@ -81,9 +81,9 @@ jobs:
     - name: Publish Release
       uses: "slord399/action-automatic-releases@v1.0.1"
       with:
-        title: "Release ${{ env.VERSION }}"
+        title: "Release v.${{ env.VERSION }}"
         repo_token: "${{ env.GITHUB_TOKEN }}"
-        automatic_release_tag: "${{ env.VERSION }}"
+        automatic_release_tag:  "v.${{ env.VERSION }}"
         prerelease: false
         files: |
             *.zip   
