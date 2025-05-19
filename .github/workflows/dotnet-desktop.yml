@@ -32,7 +32,7 @@ jobs:
       #  VERSION: ${{ github.ref_name }}
       run: | 
         echo "${{ env.VERSION }}"
-        $PARSED_VERSION = ${{ github.ref_name }}".replace('v.', '')
+        $PARSED_VERSION = "${{ github.ref_name }}".replace('v.', '')
         echo $PARSED_VERSION
       #run: echo "VERSION=${TAG#v.#}" > $GITHUB_ENV
       
