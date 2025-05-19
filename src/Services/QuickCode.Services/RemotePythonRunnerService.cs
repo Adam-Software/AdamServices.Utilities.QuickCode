@@ -15,6 +15,7 @@ namespace QuickCode.Services
     public class RemotePythonRunnerService : IRemotePythonRunnerService
     {
         public event DataReceivedEventHandler RaiseDataReceivedEvent;
+        public event IsConnectedChangeEventHandler RaiseIsConnectedChangeEvent;
 
         #region Services
 
@@ -64,10 +65,11 @@ namespace QuickCode.Services
         {
             var messageEvent = args.MessageEventType;
             
-            if(messageEvent == MessageEventType.Receive)
-            {
-                OnRaiseClientDataReceivedEvent(args.Message);
-            }
+            if(messageEvent != MessageEventType.Receive)
+                return;
+
+            OnRaiseClientDataReceivedEvent(args.Message);
+            
         }
 
         private void ConnectionEvent(object sender, TcpConnectionClientEventArgs args)
@@ -79,6 +81,7 @@ namespace QuickCode.Services
                 case ConnectionEventType.Connected:
                     {
                         mLogger.LogInformation("Client connected");
+                        IsConnected = true;
                     }
 
                     break;
@@ -86,6 +89,7 @@ namespace QuickCode.Services
                 case ConnectionEventType.Disconnect:
                     {
                         mLogger.LogInformation("Client disconected");
+                        IsConnected= false;
                     }
                     break;
             }
@@ -94,6 +98,20 @@ namespace QuickCode.Services
         #endregion
 
         #region Public fields
+
+        private bool mIsConnected = false;
+        public bool IsConnected 
+        { 
+            get { return mIsConnected; }
+            set 
+            {
+                if (mIsConnected == value) 
+                    return;
+
+                mIsConnected = value;
+                OnIsConnectedChangeEvent();
+            }
+        }
 
         #endregion
 
@@ -157,6 +175,12 @@ namespace QuickCode.Services
             var raiseEvent = RaiseDataReceivedEvent;
             raiseEvent?.Invoke(this, data);
 
+        }
+
+        protected virtual void OnIsConnectedChangeEvent()
+        {
+            var raiseEven = RaiseIsConnectedChangeEvent;
+            raiseEven?.Invoke(this);
         }
 
         #endregion

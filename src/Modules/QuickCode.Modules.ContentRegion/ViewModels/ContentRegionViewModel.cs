@@ -5,7 +5,6 @@ using QuickCode.Core.Mvvm;
 using QuickCode.Services.Interfaces;
 using System;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Threading;
 
 namespace QuickCode.Modules.ContentRegion.ViewModels
@@ -54,11 +53,13 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
         private void Subscribe()
         {
             mRemotePythonRunner.RaiseDataReceivedEvent += RaiseDataReceivedEvent;
+            mRemotePythonRunner.RaiseIsConnectedChangeEvent += RaiseIsConnectedChangeEvent;
         }
 
         private void Unsubscribe()
         {
             mRemotePythonRunner.RaiseDataReceivedEvent -= RaiseDataReceivedEvent;
+            mRemotePythonRunner.RaiseIsConnectedChangeEvent -= RaiseIsConnectedChangeEvent;
         }
 
         #endregion
@@ -78,6 +79,11 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
                 if(ExecutionResult != null && !mIsExecutionStop)
                     ExecutionResult = ExecutionResult + $"{data}\n";
             }));
+        }
+
+        private void RaiseIsConnectedChangeEvent(object sender)
+        {
+            IsConnected = mRemotePythonRunner.IsConnected;
         }
 
         #endregion
@@ -115,6 +121,13 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             {
                 SetProperty(ref mEnableDebug, value);
             }
+        }
+
+        public bool mIsConnected;
+        public bool IsConnected
+        {
+            get { return mIsConnected; }
+            set { SetProperty(ref mIsConnected, value); }
         }
 
         #endregion

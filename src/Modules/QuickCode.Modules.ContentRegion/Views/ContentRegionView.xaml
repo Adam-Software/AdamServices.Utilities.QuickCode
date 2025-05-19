@@ -14,7 +14,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" >
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal" >
             
             <Button 
                 Width="80"
@@ -77,6 +77,12 @@
                     Command="{Binding SendDebuggerCommand}"
                     CommandParameter="q"/>
 
+            <CheckBox Content="IsConnected"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Center"
+                  IsEnabled="False"
+                  IsChecked="{Binding IsConnected}"/>
+
         </StackPanel>
 
         <TextBox Grid.Row="1"
@@ -89,7 +95,7 @@
                  AcceptsReturn="True"
                  
                  Text="{Binding SourceCode, UpdateSourceTrigger=PropertyChanged}"/>
-                 
+
         <TextBox x:Name="ExecutionResultEditor"
                  Grid.Row="1"
                  Grid.Column="1"
@@ -101,6 +107,5 @@
                  IsReadOnly="True"
                  
                  Text="{Binding ExecutionResult, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-
     </Grid>
 </UserControl>
