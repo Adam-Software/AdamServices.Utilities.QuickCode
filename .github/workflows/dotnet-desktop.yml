@@ -1,4 +1,4 @@
-name: .NET Core Desktop
+name: .NET Build And Publish Release
 
 on:
   push:
@@ -13,9 +13,6 @@ env:
     
 jobs:
   build:
-    #strategy:
-    #  matrix:
-    #    configuration: [Release]
 
     runs-on: windows-latest  # For a list of available runner types, refer to
                              # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
@@ -23,61 +20,32 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      #with:
-      #  fetch-depth: 0
-
+      
     - name: Set Version Variable
       if: ${{ github.ref_type == 'tag' }}
-      #env:
-      #  VERSION: ${{ github.ref_name }}
       run: | 
-        echo "${{ env.VERSION }}"
         $PARSED_VERSION = "${{ github.ref_name }}".replace('v.', '')
-        echo $PARSED_VERSION
-        echo "VERSION=$PARSED_VERSION" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-        echo "${{ env.VERSION }}"
-      #run: echo "VERSION=${TAG#v.#}" > $GITHUB_ENV
-      
-    # Install the .NET Core workload
+        echo "VERSION=$PARSED_VERSION" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append  
+        
     - name: Install .NET Core
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
-    # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v2
       
-    # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
       run: msbuild $env:SOLUTION_NAME /t:Restore /p:OutDir=$env:OUTPUT_PATH /p:Configuration=Release
-      #env:
-      #  Configuration: ${{ matrix.configuration }}
-
+      
     - name: Build the application
       run: msbuild $env:SOLUTION_NAME /t:Build /p:OutDir=$env:OUTPUT_PATH /p:Configuration=Release
-      #env:
-      #  Configuration: ${{ matrix.configuration }}
-
+      
     - name: Zip release
       uses: TheDoctor0/zip-release@0.7.6
       with:
-        # Filename for archive
-        filename: "QuickCode.portable.zip" # default is release.zip
-        # Base path for archive files
-        #path: "${{ env.OUTPUT_PATH }}" # optional, default is .
-        # Working directory before zipping
-        directory: "${{ env.OUTPUT_PATH }}" # optional, default is . 
-        # List of excluded files / directories
-        #exclusions: # optional, default is 
-        # List of excluded files / directories with recursive wildcards (only applies on Windows with `zip` type)
-        #recursive_exclusions: # optional, default is 
-        # Provide any custom parameters to the zipping command
-        #custom: # optional, default is 
-        # Tool to use for archiving
-        #type: # optional, default is zip
-        # An extra command that will run before zipping
-        #command: # optional, default is  
+        filename: "QuickCode.portable.zip"
+        directory: "${{ env.OUTPUT_PATH }}" 
           
 
     - name: Publish Release
