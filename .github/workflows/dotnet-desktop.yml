@@ -26,14 +26,14 @@ jobs:
       #with:
       #  fetch-depth: 0
 
-    #- name: Set Version Variable
+    - name: Set Version Variable
     #  if: ${{ github.ref_type == 'tag' }}
       #env:
       #  VERSION: ${{ github.ref_name }}
-    #  run: | 
-    #    echo "${{ env.VERSION }}"
-    #    $VERSION = "${{ env.VERSION }} -replace 'v.', ''"
-    #    echo "${{ env.VERSION }}"
+      run: | 
+        echo "${{ env.VERSION }}"
+        echo "${{ env.VERSION }} = ${{ env.VERSION }} -replace 'v.', ''"
+        echo "${{ env.VERSION }}"
       #run: echo "VERSION=${TAG#v.#}" > $GITHUB_ENV
       
     # Install the .NET Core workload
