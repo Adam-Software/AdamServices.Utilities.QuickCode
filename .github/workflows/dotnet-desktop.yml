@@ -6,7 +6,7 @@ on:
       - "v.[0-9]+.[0-9]+.[0-9]+"
 
 env:
-  VERSION:  ${{ github.ref_name }}
+  VERSION: 1.0.0
   SOLUTION_NAME: AdamServices.Utilities.QuickCode.sln                         # Replace with your solution name, i.e. MyWpfApp.sln.
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   OUTPUT_PATH: c:/output/
@@ -27,13 +27,13 @@ jobs:
       #  fetch-depth: 0
 
     - name: Set Version Variable
-    #  if: ${{ github.ref_type == 'tag' }}
+      if: ${{ github.ref_type == 'tag' }}
       #env:
       #  VERSION: ${{ github.ref_name }}
       run: | 
         echo "${{ env.VERSION }}"
-        $new_version = $env:VERSION.replace('v.', '')
-        echo $new_version
+        $VERSION = "${{ github.ref_name }}".replace('v.', '')
+        echo $VERSION
       #run: echo "VERSION=${TAG#v.#}" > $GITHUB_ENV
       
     # Install the .NET Core workload
