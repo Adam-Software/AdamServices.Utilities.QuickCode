@@ -32,6 +32,7 @@ jobs:
       #  VERSION: ${{ github.ref_name }}
       run: | 
         echo "${{ env.VERSION }}"
+        $VERSION -replace 'v.', ''
         echo "${{ env.VERSION }}"
       #run: echo "VERSION=${TAG#v.#}" > $GITHUB_ENV
       
