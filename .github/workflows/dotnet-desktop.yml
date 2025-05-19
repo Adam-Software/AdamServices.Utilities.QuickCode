@@ -28,10 +28,10 @@ jobs:
 
     - name: Set Version Variable
       if: ${{ github.ref_type == 'tag' }}
-      #env:
-      #  TAG: ${{ github.ref_name }}
+      env:
+        VERSION: ${{ github.ref_name }}
       run: | 
-        $VERSION = ${{ github.ref_name }}
+        #$VERSION = ${{ github.ref_name }}
         echo "VERSION ${{ VERSION }}"
         $VERSION -replace 'v.', ''
         echo "VERSION ${{ VERSION }}"
