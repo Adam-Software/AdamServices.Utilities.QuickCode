@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:QuickCode.Modules.ContentRegion.Views"
              xmlns:prism="http://prismlibrary.com/" 
+             xmlns:hc="https://handyorg.github.io/handycontrol"
              prism:ViewModelLocator.AutoWireViewModel="True" >
     <Grid>
         <Grid.ColumnDefinitions>
@@ -17,12 +18,12 @@
         <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal" >
             
             <Button 
-                Width="80"
-                Height="20"
+                Width="80"                
                 Margin="20 0 10 0"
                 HorizontalAlignment="Left"
                 Content="Start" 
-                Command="{Binding StartCommand}"/>
+                Command="{Binding StartCommand}"
+                Style="{DynamicResource ButtonDefault.Small}"/>
 
             <CheckBox Content="Enable Debug"
                       VerticalAlignment="Center"
@@ -31,80 +32,83 @@
 
             <Button 
                 Width="80"
-                Height="20"
                 Margin="10 0 10 0"
                 HorizontalAlignment="Left"
                 Content="Stop" 
-                Command="{Binding StopCommand}"/>
+                Command="{Binding StopCommand}"
+                Style="{DynamicResource ButtonDefault.Small}"/>
 
             <Button 
-                Width="40"
-                Height="20"
+                Width="40"                
                 Margin="10 0 10 0"
                 HorizontalAlignment="Left"
                 Content="next" 
                 IsEnabled="{Binding EnableDebug}"
                 Command="{Binding SendDebuggerCommand}"
-                CommandParameter="n" />
+                CommandParameter="n"
+                Style="{DynamicResource ButtonDefault.Small}"/>
 
             <Button 
-                Width="40"
-                Height="20"
+                Width="40"                
                 Margin="10 0 10 0"
                 HorizontalAlignment="Left"
                 Content="llist" 
                 IsEnabled="{Binding EnableDebug}"
                 Command="{Binding SendDebuggerCommand}"
-                CommandParameter="ll"/>
+                CommandParameter="ll"
+                Style="{DynamicResource ButtonDefault.Small}"/>
 
-            <Button 
-                    Width="40"
-                    Height="20"
+            <Button Width="50"    
                     Margin="10 0 10 0"
                     HorizontalAlignment="Left"
                     Content="restart"
                     IsEnabled="{Binding EnableDebug}"
                     Command="{Binding SendDebuggerCommand}"
-                    CommandParameter="restart"/>
+                    CommandParameter="restart"
+                    Style="{DynamicResource ButtonDefault.Small}"/>
 
-            <Button Grid.Row="0"
-                    Width="40"
-                    Height="20"
+            <Button Width="40"
                     Margin="10 0 10 0"
                     HorizontalAlignment="Left"
                     Content="quit" 
                     IsEnabled="{Binding EnableDebug}"
                     Command="{Binding SendDebuggerCommand}"
-                    CommandParameter="q"/>
+                    CommandParameter="q"
+                    Style="{DynamicResource ButtonDefault.Small}"/>
 
             <CheckBox Content="IsConnected"
-                  HorizontalAlignment="Right"
-                  VerticalAlignment="Center"
-                  IsEnabled="False"
-                  IsChecked="{Binding IsConnected}"/>
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      IsEnabled="False"
+                      IsChecked="{Binding IsConnected}"/>
 
         </StackPanel>
 
         <TextBox Grid.Row="1"
                  Grid.Column="0"
                  Margin="10"
+                 Padding="10"
                  FontSize="14"
                  FontFamily="Consolas"
                  FontWeight="Medium"
                  TextWrapping="Wrap"
                  AcceptsReturn="True"
-                 
+                 VerticalContentAlignment="Top"
+
                  Text="{Binding SourceCode, UpdateSourceTrigger=PropertyChanged}"/>
+        
 
         <TextBox x:Name="ExecutionResultEditor"
                  Grid.Row="1"
                  Grid.Column="1"
                  Margin="10"
+                 Padding="10"
                  FontSize="14"
                  FontFamily="Consolas"
                  FontWeight="Medium"
                  TextWrapping="Wrap"
                  IsReadOnly="True"
+                 VerticalContentAlignment="Top"
                  
                  Text="{Binding ExecutionResult, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
     </Grid>
