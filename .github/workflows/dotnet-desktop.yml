@@ -31,7 +31,6 @@ jobs:
       env:
         VERSION: ${{ github.ref_name }}
       run: | 
-        #$VERSION = ${{ github.ref_name }}
         echo "VERSION ${{ VERSION }}"
         $VERSION -replace 'v.', ''
         echo "VERSION ${{ VERSION }}"
