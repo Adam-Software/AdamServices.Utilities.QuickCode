@@ -34,7 +34,7 @@ jobs:
         echo "${{ env.VERSION }}"
         $PARSED_VERSION = "${{ github.ref_name }}".replace('v.', '')
         echo $PARSED_VERSION
-        echo "VERSION=$PARSED_VERSION" >> $env:GITHUB_ENV
+        echo "$VERSION=$PARSED_VERSION" >> $env:GITHUB_ENV
         echo "${{ env.VERSION }}"
       #run: echo "VERSION=${TAG#v.#}" > $GITHUB_ENV
       
