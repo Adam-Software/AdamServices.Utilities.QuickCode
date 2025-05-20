@@ -1,14 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using PHS.Networking.Enums;
 using QuickCode.Services.Interfaces;
 using QuickCode.Services.Interfaces.JsonModel;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Tcp.NET.Client;
-using Tcp.NET.Client.Events.Args;
-using Tcp.NET.Client.Models;
+using WatsonTcp;
 
 namespace QuickCode.Services
 {
@@ -25,7 +22,7 @@ namespace QuickCode.Services
 
         #region Var
 
-        private readonly TcpNETClient mTcpClient;
+        private readonly WatsonTcpClient mTcpClient;
 
         #endregion
 
@@ -35,7 +32,8 @@ namespace QuickCode.Services
         {
             mLogger = serviceProvider.GetService<ILogger<RemotePythonRunnerService>>();
 
-            mTcpClient = new TcpNETClient(new ParamsTcpClient("localhost", 19000, "\r\n", isSSL:false));
+            //new ParamsTcpClient("10.254.254.230", 19000, "\r\n", isSSL: false)
+            mTcpClient = new WatsonTcpClient("127.0.0.1", 19000);
             
             Subscribe();
             mLogger.LogInformation("Load RemotePythonRunnerService ~");
@@ -47,32 +45,74 @@ namespace QuickCode.Services
 
         private void Subscribe()
         {
-            mTcpClient.ConnectionEvent += ConnectionEvent;
-            mTcpClient.MessageEvent += MessageEvent;
+            mTcpClient.Events.ServerConnected += ServerConnected;
+            mTcpClient.Events.MessageReceived += MessageReceived;
+            mTcpClient.Events.ExceptionEncountered += ExceptionEncountered;
+            mTcpClient.Events.ServerDisconnected += ServerDisconnected;
+
+            //mTcpClient.ConnectionEvent += ConnectionEvent;
+            //mTcpClient.MessageEvent += MessageEvent;
+            //mTcpClient.ErrorEvent += ErrorEvent;
         }
+
+
+
+
 
         private void Unsubscribe()
         {
-            mTcpClient.ConnectionEvent -= ConnectionEvent;
-            mTcpClient.MessageEvent -= MessageEvent;
+            mTcpClient.Events.ServerConnected -= ServerConnected;
+            mTcpClient.Events.MessageReceived -= MessageReceived;
+            mTcpClient.Events.ExceptionEncountered -= ExceptionEncountered;
+            mTcpClient.Events.ServerDisconnected -= ServerDisconnected;
+            //mTcpClient.ConnectionEvent -= ConnectionEvent;
+            //mTcpClient.MessageEvent -= MessageEvent;
+            //mTcpClient.ErrorEvent -= ErrorEvent;
         }
 
         #endregion
 
         #region Events
 
-        private void MessageEvent(object sender, TcpMessageClientEventArgs args)
+        private void ServerConnected(object sender, ConnectionEventArgs e)
         {
-            var messageEvent = args.MessageEventType;
-            
-            if(messageEvent != MessageEventType.Receive)
-                return;
-
-            OnRaiseClientDataReceivedEvent(args.Message);
-            
+            mLogger.LogInformation("Client connected");
+            IsConnected = true;
         }
 
-        private void ConnectionEvent(object sender, TcpConnectionClientEventArgs args)
+        private void ServerDisconnected(object sender, DisconnectionEventArgs e)
+        {
+            mLogger.LogInformation("Client disconected");
+            IsConnected = false;
+        }
+
+        private void ExceptionEncountered(object sender, ExceptionEventArgs e)
+        {
+            mLogger.LogInformation("{error}", e.Exception.Message);
+        }
+
+        private void MessageReceived(object sender, MessageReceivedEventArgs e)
+        {
+            //var messageEvent = args.MessageEventType;
+
+            //if (messageEvent != MessageEventType.Receive)
+            //    return;
+
+            var message = System.Text.Encoding.Default.GetString(e.Data);
+            OnRaiseClientDataReceivedEvent(message);
+        }
+
+        /*private void MessageEvent(object sender, TcpMessageClientEventArgs args)
+        {
+            var messageEvent = args.MessageEventType;
+
+            if (messageEvent != MessageEventType.Receive)
+                return;
+
+            OnRaiseClientDataReceivedEvent(args.Message);            
+        }*/
+
+        /*private void ConnectionEvent(object sender, TcpConnectionClientEventArgs args)
         {
             ConnectionEventType connectionEvent = args.ConnectionEventType;
 
@@ -82,6 +122,8 @@ namespace QuickCode.Services
                     {
                         mLogger.LogInformation("Client connected");
                         IsConnected = true;
+
+                        //CheckRunning();
                     }
 
                     break;
@@ -94,6 +136,25 @@ namespace QuickCode.Services
                     break;
             }
         }
+
+        public Task CheckRunning()
+        {
+            return Task.Run(async () =>
+            {
+                while (mTcpClient.IsRunning) 
+                {
+                    var test = await mTcpClient.SendAsync(new byte[0]);
+                    IsConnected = test;
+                }
+                IsConnected = false;
+            });
+        }
+
+        private void ErrorEvent(object sender, TcpErrorClientEventArgs args)
+        {
+            IsConnected = false;
+            mLogger.LogInformation("{error}", args.Exception);
+        }*/
 
         #endregion
 
@@ -109,6 +170,7 @@ namespace QuickCode.Services
                     return;
 
                 mIsConnected = value;
+
                 OnIsConnectedChangeEvent();
             }
         }
@@ -124,9 +186,10 @@ namespace QuickCode.Services
             if (withDebug)
                 messageType = "debug_source_code";
 
-            var result = await mTcpClient.ConnectAsync();
+            //var result = 
+            mTcpClient.Connect();
           
-            if (result)
+            if (mTcpClient.Connected)
             {
                 ReceivedMessage receivedMessage = new()
                 {
@@ -150,9 +213,9 @@ namespace QuickCode.Services
             };
 
             var message = JsonSerializer.Serialize(receivedMessage);
-            var result = await mTcpClient.SendAsync(message);
+            _ = await mTcpClient.SendAsync(message);
 
-            mLogger.LogInformation("Send control_characters result: {result}", result);
+            //mLogger.LogInformation("Send control_characters result: {result}", result);
         }
 
         public async Task DisconnectAsync(bool withDebug = false)
@@ -163,7 +226,7 @@ namespace QuickCode.Services
                 return;
             }
 
-            await mTcpClient.DisconnectAsync();
+            mTcpClient.Disconnect();
         }
 
         #endregion
