@@ -1,9 +1,11 @@
 ﻿using System;
+using Microsoft.Extensions.DependencyInjection;
+using Prism.Navigation;
 using Prism.Regions;
 
 namespace QuickCode.Core.Mvvm
 {
-    public class RegionViewModelBase : ViewModelBase, INavigationAware, IConfirmNavigationRequest
+    public class RegionViewModelBase : ViewModelBase, INavigationAware, IConfirmNavigationRequest, IDestructible
     {
         protected IRegionManager RegionManager { get; private set; }
 
@@ -12,6 +14,14 @@ namespace QuickCode.Core.Mvvm
             RegionManager = regionManager;
         }
 
+        public RegionViewModelBase(IServiceProvider serviceProvider)
+        {
+            RegionManager = serviceProvider.GetService<IRegionManager>();
+        }
+
+        /// <summary>
+        /// Occurs when the navigation area is called
+        /// </summary>
         public virtual void ConfirmNavigationRequest(NavigationContext navigationContext, Action<bool> continuationCallback)
         {
             continuationCallback(true);
@@ -22,11 +32,17 @@ namespace QuickCode.Core.Mvvm
             return true;
         }
 
+        /// <summary>
+        /// On close region
+        /// </summary>
         public virtual void OnNavigatedFrom(NavigationContext navigationContext)
         {
 
         }
 
+        /// <summary>
+        /// On load region
+        /// </summary>
         public virtual void OnNavigatedTo(NavigationContext navigationContext)
         {
 

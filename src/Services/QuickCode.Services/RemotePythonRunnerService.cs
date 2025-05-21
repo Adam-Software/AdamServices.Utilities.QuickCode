@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using QuickCode.Services.Interfaces;
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using System.Threading.Tasks;
 using WatsonTcp;
 
@@ -23,6 +22,7 @@ namespace QuickCode.Services
         #region Var
 
         private readonly WatsonTcpClient mTcpClient;
+        private bool mIsDisposing;
 
         #endregion
 
@@ -147,6 +147,34 @@ namespace QuickCode.Services
             }
 
             mTcpClient.Disconnect();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
+
+        #region Private methods
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!mIsDisposing)
+            {
+                if (disposing)
+                {
+                    Unsubscribe();
+
+                    if (mTcpClient?.Connected ?? false)
+                        mTcpClient.Disconnect(true);
+
+                    mTcpClient?.Dispose();
+                }
+
+                mIsDisposing = true;
+            }
         }
 
         #endregion

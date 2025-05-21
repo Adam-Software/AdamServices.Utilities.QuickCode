@@ -9,4 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Prism.Wpf" Version="8.1.97" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Services\QuickCode.Services.Interfaces\QuickCode.Services.Interfaces.csproj" />
+  </ItemGroup>
 </Project>

@@ -64,6 +64,8 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         #endregion
 
+
+
         #region Navigation
 
         public override void OnNavigatedTo(NavigationContext navigationContext) {}
@@ -128,6 +130,15 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
         {
             get { return mIsConnected; }
             set { SetProperty(ref mIsConnected, value); }
+        }
+
+        #endregion
+
+        #region Public methods
+
+        public override void Destroy()
+        {
+            Unsubscribe();
         }
 
         #endregion

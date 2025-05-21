@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace QuickCode.Services.Interfaces
 {
@@ -8,7 +9,7 @@ namespace QuickCode.Services.Interfaces
     public delegate void IsConnectedChangeEventHandler(object sender);
     #endregion
 
-    public interface IRemotePythonRunnerService
+    public interface IRemotePythonRunnerService : IDisposable
     {
         public event DataReceivedEventHandler RaiseDataReceivedEvent;
         public event IsConnectedChangeEventHandler RaiseIsConnectedChangeEvent;
