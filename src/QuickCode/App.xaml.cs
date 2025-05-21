@@ -1,6 +1,8 @@
-﻿using System;
-using System.Windows;
+﻿using Example;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Prism.DryIoc;
 using Prism.Ioc;
 using Prism.Modularity;
 using Prism.Regions;
@@ -10,11 +12,19 @@ using QuickCode.Services.Interfaces;
 using QuickCode.Views;
 using Serilog;
 using Serilog.Core;
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace QuickCode
 {
-    public partial class App
-    {
+    public partial class App : PrismApplication, IDisposable
+    { 
+        public App()
+        {
+            SetupUnhandledExceptionHandling();
+        }
 
         private bool mIsDisposing;
 
@@ -25,19 +35,34 @@ namespace QuickCode
 
         protected override void RegisterTypes(IContainerRegistry containerRegistry)
         {
+            RegisterServices(containerRegistry);
+
             containerRegistry.RegisterSingleton<IRemotePythonRunnerService, RemotePythonRunnerService>();
+        }
 
-            containerRegistry.RegisterServices(services =>
+        private void RegisterServices(IContainerRegistry containerRegistry)
+        {
+            containerRegistry.RegisterServices((services) =>
             {
-                
-                Logger mainLogger = new LoggerConfiguration()
-                    .MinimumLevel.Verbose()
-                    .WriteTo.File("logs/log-.txt",
-                            rollingInterval: RollingInterval.Day, retainedFileCountLimit: 10,
-                            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
-                    .CreateLogger();
+                ConfigurationBuilder configurationBuilder = new();
+                configurationBuilder.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                IConfigurationRoot configuration = configurationBuilder.Build();
 
-                services.AddLogging(s => s.AddSerilog(mainLogger, dispose: true));
+                AppSettingService appSettingService = new();
+                IConfigurationSection appSettingsSection = configuration.GetSection("AppSettingsOptions");
+                appSettingsSection.Bind(appSettingService);
+                //services.Configure<AppSettingService>(appSettingsSection);
+                services.AddSingleton<IAppSettingService>(appSettingService);
+
+                services.AddLogging(loggingBuilder =>
+                {
+                    Logger logger = new LoggerConfiguration()
+                        .ReadFrom.Configuration(configuration)
+                        .CreateLogger();
+
+                    loggingBuilder.ClearProviders();
+                    loggingBuilder.AddSerilog(logger, dispose: true);
+                });
             });
         }
 
@@ -61,6 +86,7 @@ namespace QuickCode
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -84,5 +110,54 @@ namespace QuickCode
 
             mIsDisposing = true;
         }
+
+        #region UnhandledExceptionHandling
+
+        private void SetupUnhandledExceptionHandling()
+        {
+            // Catch exceptions from all threads in the AppDomain.
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+                ShowUnhandledException(args.ExceptionObject as Exception, "AppDomain.CurrentDomain.UnhandledException", false);
+
+            // Catch exceptions from each AppDomain that uses a task scheduler for async operations.
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+                ShowUnhandledException(args.Exception, "TaskScheduler.UnobservedTaskException", false);
+
+            // Catch exceptions from a single specific UI dispatcher thread.
+            Current.Dispatcher.UnhandledException += (sender, args) =>
+            {
+                // If we are debugging, let Visual Studio handle the exception and take us to the code that threw it.
+                if (!Debugger.IsAttached)
+                {
+                    args.Handled = true;
+                    ShowUnhandledException(args.Exception, "Dispatcher.UnhandledException", true);
+                }
+            };
+        }
+
+        private void ShowUnhandledException(Exception e, string unhandledExceptionType, bool promptUserForShutdown)
+        {
+            ILogger<App> logger = Container.Resolve<IServiceProvider>().GetService<ILogger<App>>();
+
+            var messageBoxTitle = $"Unexpected Error Occurred: {unhandledExceptionType}";
+            var messageBoxMessage = $"The following exception occurred:\n\n{e}";
+            var messageBoxButtons = MessageBoxButton.OK;
+
+            if (promptUserForShutdown)
+            {
+                messageBoxMessage += "\n\nNormally the app would die now. Should we let it die?";
+                messageBoxButtons = MessageBoxButton.YesNo;
+            }
+
+            if (MessageBox.Show(messageBoxMessage, messageBoxTitle, messageBoxButtons) == MessageBoxResult.Yes)
+            {
+                logger.LogCritical($"Unhandled exception: {e.Message}");
+
+                OnAppCrashOrExit();
+            }
+        }
+
+
+        #endregion
     }
 }

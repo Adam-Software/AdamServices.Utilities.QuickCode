@@ -19,4 +19,9 @@
     <ProjectReference Include="..\Services\QuickCode.Services.Interfaces\QuickCode.Services.Interfaces.csproj" />
     <ProjectReference Include="..\Services\QuickCode.Services\QuickCode.Services.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

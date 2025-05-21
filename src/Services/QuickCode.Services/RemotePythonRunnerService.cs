@@ -31,11 +31,15 @@ namespace QuickCode.Services
         public RemotePythonRunnerService(IServiceProvider serviceProvider)
         {
             mLogger = serviceProvider.GetService<ILogger<RemotePythonRunnerService>>();
+            IAppSettingService appSettings = serviceProvider.GetRequiredService<IAppSettingService>();
 
-            mTcpClient = new WatsonTcpClient("127.0.0.1", 19000);
+            var ip = appSettings.ClientSettings.Ip;
+            var port = appSettings.ClientSettings.Port;
+
+            mTcpClient = new WatsonTcpClient(ip, port);
             
             Subscribe();
-            mLogger.LogInformation("Load RemotePythonRunnerService ~");
+            mLogger.LogInformation("Service run on {ip}:{port}", ip, port);
         }
 
         #endregion
