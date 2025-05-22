@@ -34,13 +34,13 @@ namespace QuickCode.Services
             mLogger = serviceProvider.GetService<ILogger<RemotePythonRunnerService>>();
             IAppSettingService appSettings = serviceProvider.GetRequiredService<IAppSettingService>();
 
-            var ip = appSettings.ClientSettings.Ip;
-            var port = appSettings.ClientSettings.Port;
+            Ip = appSettings.ClientSettings.Ip;
+            Port = appSettings.ClientSettings.Port;
 
-            mTcpClient = new WatsonTcpClient(ip, port);
+            mTcpClient = new WatsonTcpClient(Ip, Port);
             
             Subscribe();
-            mLogger.LogInformation("Service run on {ip}:{port}", ip, port);
+            mLogger.LogInformation("Service run on {ip}:{port}", Ip, Port);
         }
 
         #endregion
@@ -95,6 +95,9 @@ namespace QuickCode.Services
 
         #region Public fields
 
+        public string Ip { get; private set; }
+        public int Port { get; private set; }
+
         private bool mIsConnected = false;
         public bool IsConnected 
         { 
@@ -120,16 +123,13 @@ namespace QuickCode.Services
             if (withDebug)
                 messageType = "debug_source_code";
 
-            var code = new Dictionary<string, object>() { { messageType, sourceCode } };
-
             await ConnectAsync();
-            
-            if (mTcpClient.Connected)
-            {
-                var sendResult = await mTcpClient.SendAsync("", code);
 
-                mLogger.LogTrace("Send message result: {result}", sendResult);
-            }
+            if (!mTcpClient.Connected)
+                throw new TimeoutException();
+
+            var code = new Dictionary<string, object>() { { messageType, sourceCode } };
+            _ = await mTcpClient.SendAsync("", code);
         }
 
 

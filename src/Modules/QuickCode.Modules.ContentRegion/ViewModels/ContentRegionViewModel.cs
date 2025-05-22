@@ -4,6 +4,8 @@ using Prism.Commands;
 using QuickCode.Core.Mvvm;
 using QuickCode.Services.Interfaces;
 using System;
+using System.Net.Sockets;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -150,13 +152,18 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         #region DelegateCommand methods
 
-        private void Start()
+        private async void Start()
         {
             ExecutionResult = "";
             string sourceCode = SourceCode;
+
             try
             {
-                mRemotePythonRunner.ConnectAndSendCodeAsync(sourceCode, EnableDebug);
+                await mRemotePythonRunner.ConnectAndSendCodeAsync(sourceCode, EnableDebug);
+            }
+            catch (TimeoutException)
+            {
+                ExecutionResult = $"Не могу подключиться к серверу по указаному адресу {mRemotePythonRunner.Ip}:{mRemotePythonRunner.Port}";
             }
             catch(Exception ex) 
             {

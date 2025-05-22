@@ -18,5 +18,8 @@ namespace QuickCode.Services.Interfaces
         public Task DisconnectAsync(bool withDebug = false);
 
         public bool IsConnected { get; }
+        public string Ip { get; }
+        public int Port { get; }
+
     }
 }
