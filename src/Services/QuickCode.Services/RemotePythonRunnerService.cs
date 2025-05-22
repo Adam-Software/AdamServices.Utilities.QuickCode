@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using QuickCode.Services.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using WatsonTcp;
 
@@ -104,7 +105,6 @@ namespace QuickCode.Services
                     return;
 
                 mIsConnected = value;
-
                 OnIsConnectedChangeEvent();
             }
         }
@@ -121,19 +121,20 @@ namespace QuickCode.Services
                 messageType = "debug_source_code";
 
             var code = new Dictionary<string, object>() { { messageType, sourceCode } };
-            mTcpClient.Connect();
-          
+
+            await ConnectAsync();
+            
             if (mTcpClient.Connected)
             {
                 var sendResult = await mTcpClient.SendAsync("", code);
 
-                mLogger.LogInformation("Send message result: {result}", sendResult);
+                mLogger.LogTrace("Send message result: {result}", sendResult);
             }
         }
 
+
         public async Task SendСontrolCharacter(string controlCharacter)
-        {
-            
+        {   
             var character = new Dictionary<string, object>() { { "control_characters", controlCharacter } };
 
             if (mTcpClient.Connected)
@@ -179,6 +180,34 @@ namespace QuickCode.Services
 
                 mIsDisposing = true;
             }
+        }
+
+        private async Task ConnectAsync()
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    mTcpClient.Connect();
+                }
+                catch (TimeoutException ex)
+                {
+                    mLogger.LogError("{error}", ex.Message);
+                    mLogger.LogError("Remote python service unaviable");
+                    return;
+                }
+                catch (SocketException ex)
+                {
+                    mLogger.LogError("{error}", ex.Message);
+                    mLogger.LogError("Socket exception because remote python service unaviable");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    mLogger.LogError("{error}", ex.Message);
+                    return;
+                }
+            });
         }
 
         #endregion

@@ -1,6 +1,8 @@
 ﻿using Example;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using Prism.DryIoc;
 using Prism.Ioc;
@@ -14,6 +16,7 @@ using Serilog;
 using Serilog.Core;
 using System;
 using System.Diagnostics;
+using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -51,7 +54,6 @@ namespace QuickCode
                 AppSettingService appSettingService = new();
                 IConfigurationSection appSettingsSection = configuration.GetSection("AppSettingsOptions");
                 appSettingsSection.Bind(appSettingService);
-                //services.Configure<AppSettingService>(appSettingsSection);
                 services.AddSingleton<IAppSettingService>(appSettingService);
 
                 services.AddLogging(loggingBuilder =>
@@ -80,7 +82,7 @@ namespace QuickCode
 
         private void OnAppCrashOrExit()
         {
-           Dispose();
+            Dispose();
         }
 
         public void Dispose()
@@ -137,7 +139,21 @@ namespace QuickCode
 
         private void ShowUnhandledException(Exception e, string unhandledExceptionType, bool promptUserForShutdown)
         {
-            ILogger<App> logger = Container.Resolve<IServiceProvider>().GetService<ILogger<App>>();
+            ILogger<App> logger = Container.Resolve<ILogger<App>>();
+
+            switch (e)
+            {
+                case SocketException:
+                    {
+                        logger.LogError($"SocketException. Is normaly when server unaviable");
+                        return;
+                    }
+                case AggregateException:
+                    {
+                        logger.LogError($"AggregateException. Is normaly when server unaviable");
+                        return;
+                    }
+            }
 
             var messageBoxTitle = $"Unexpected Error Occurred: {unhandledExceptionType}";
             var messageBoxMessage = $"The following exception occurred:\n\n{e}";
@@ -149,11 +165,12 @@ namespace QuickCode
                 messageBoxButtons = MessageBoxButton.YesNo;
             }
 
-            if (MessageBox.Show(messageBoxMessage, messageBoxTitle, messageBoxButtons) == MessageBoxResult.Yes)
-            {
-                logger.LogCritical($"Unhandled exception: {e.Message}");
+            logger.LogCritical("Unhandled exception {exception}:", e.Message);
 
-                OnAppCrashOrExit();
+            if (MessageBox.Show(messageBoxMessage, messageBoxTitle, messageBoxButtons) == MessageBoxResult.OK)
+            {
+                //Current.MainWindow.Close();
+                //Current.Shutdown();
             }
         }
 

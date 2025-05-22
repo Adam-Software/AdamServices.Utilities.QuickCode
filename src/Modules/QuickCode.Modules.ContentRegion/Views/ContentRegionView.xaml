@@ -27,6 +27,7 @@
 
             <CheckBox Content="Enable Debug"
                       VerticalAlignment="Center"
+                      IsEnabled="{Binding IsConnected, Converter={StaticResource Boolean2BooleanReConverter}}"
                       IsChecked="{Binding EnableDebug}"
                       />
 

@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Prism.Commands;
-using Prism.Regions;
 using QuickCode.Core.Mvvm;
 using QuickCode.Services.Interfaces;
 using System;
@@ -34,10 +34,10 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         #region ~
 
-        public ContentRegionViewModel(IRegionManager regionManager, IRemotePythonRunnerService remotePythonRunner, ILogger<ContentRegionViewModel> logger) : base(regionManager)
+        public ContentRegionViewModel(IServiceProvider serviceProvider) : base(serviceProvider)
         {
-            mLogger = logger;
-            mRemotePythonRunner = remotePythonRunner;
+            mLogger = serviceProvider.GetService<ILogger<ContentRegionViewModel>>();
+            mRemotePythonRunner = serviceProvider.GetService<IRemotePythonRunnerService>();
 
             StartCommand = new DelegateCommand(Start, StartCanExecute);
             StopCommand = new DelegateCommand(Stop, StopCanExecute);
@@ -64,11 +64,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         #endregion
 
-
-
         #region Navigation
-
-        public override void OnNavigatedTo(NavigationContext navigationContext) {}
 
         #endregion
 
@@ -129,7 +125,16 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
         public bool IsConnected
         {
             get { return mIsConnected; }
-            set { SetProperty(ref mIsConnected, value); }
+            set 
+            { 
+                var isNewValue = SetProperty(ref mIsConnected, value);
+
+                if (isNewValue)
+                {
+                    StopCommand.RaiseCanExecuteChanged();
+                    SendDebuggerCommand.RaiseCanExecuteChanged();
+                }
+            }
         }
 
         #endregion
@@ -147,9 +152,17 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private void Start()
         {
-            mExecutionResult = "";
-            var sourceCode = SourceCode;
-            mRemotePythonRunner.ConnectAndSendCodeAsync(sourceCode, EnableDebug);
+            ExecutionResult = "";
+            string sourceCode = SourceCode;
+            try
+            {
+                mRemotePythonRunner.ConnectAndSendCodeAsync(sourceCode, EnableDebug);
+            }
+            catch(Exception ex) 
+            {
+                mLogger.LogError("{error}", ex);
+            }
+            
             mIsExecutionStop = false;
         }
 
@@ -166,7 +179,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private bool StopCanExecute()
         {
-            return true;
+            return IsConnected;
         }
 
         private void SendDebugger(object commandParam)
@@ -177,7 +190,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private bool SendDebuggerCanExecute(object arg)
         {
-            return true;
+            return IsConnected && EnableDebug;
         }
 
         #endregion
