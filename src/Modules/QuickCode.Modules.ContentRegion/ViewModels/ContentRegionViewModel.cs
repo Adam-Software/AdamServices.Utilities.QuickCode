@@ -4,8 +4,6 @@ using Prism.Commands;
 using QuickCode.Core.Mvvm;
 using QuickCode.Services.Interfaces;
 using System;
-using System.Net.Sockets;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -76,7 +74,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
         {
             Application.Current?.Dispatcher?.BeginInvoke(DispatcherPriority.Background, new Action(() =>
             {
-                if(ExecutionResult != null && !mIsExecutionStop)
+               if(!mIsExecutionStop && IsConnected)              
                     ExecutionResult = ExecutionResult + $"{data}\n";
             }));
         }
@@ -103,7 +101,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             }
         }
 
-        private string mExecutionResult = "";
+        private string mExecutionResult = string.Empty;
         public string ExecutionResult
         {
             get { return mExecutionResult; }
@@ -154,7 +152,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private async void Start()
         {
-            ExecutionResult = "";
+            ExecutionResult = string.Empty;
             string sourceCode = SourceCode;
 
             try

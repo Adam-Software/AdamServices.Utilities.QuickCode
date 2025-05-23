@@ -23,6 +23,7 @@
                 HorizontalAlignment="Left"
                 Content="Start" 
                 Command="{Binding StartCommand}"
+                IsEnabled="{Binding IsConnected, Converter={StaticResource Boolean2BooleanReConverter}}"
                 Style="{DynamicResource ButtonDefault.Small}"/>
 
             <CheckBox Content="Enable Debug"
