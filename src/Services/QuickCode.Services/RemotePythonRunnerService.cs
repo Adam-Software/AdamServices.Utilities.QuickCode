@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using QuickCode.Services.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -22,7 +23,7 @@ namespace QuickCode.Services
 
         #region Var
 
-        private readonly WatsonTcpClient mTcpClient;
+        private WatsonTcpClient mTcpClient;
         private bool mIsDisposing;
 
         #endregion
@@ -32,15 +33,22 @@ namespace QuickCode.Services
         public RemotePythonRunnerService(IServiceProvider serviceProvider)
         {
             mLogger = serviceProvider.GetService<ILogger<RemotePythonRunnerService>>();
-            IAppSettingService appSettings = serviceProvider.GetRequiredService<IAppSettingService>();
-
-            Ip = appSettings.ClientSettings.Ip;
-            Port = appSettings.ClientSettings.Port;
-
-            mTcpClient = new WatsonTcpClient(Ip, Port);
+            IOptionsMonitor<AppSettings> appSettingsMonitor = serviceProvider.GetService<IOptionsMonitor<AppSettings>>();
             
+            Ip = appSettingsMonitor.CurrentValue.ClientSettings.Ip;
+            Port = appSettingsMonitor.CurrentValue.ClientSettings.Port;
+            
+            mTcpClient = new WatsonTcpClient(Ip, Port);
+            appSettingsMonitor.OnChange(OnChangeClientSettings);
             Subscribe();
+
             mLogger.LogInformation("Service run on {ip}:{port}", Ip, Port);
+        }
+
+        private void OnChangeClientSettings(AppSettings settings, string arg2)
+        {
+            Ip = settings.ClientSettings.Ip;
+            Port = settings.ClientSettings.Port;
         }
 
         #endregion
@@ -95,8 +103,34 @@ namespace QuickCode.Services
 
         #region Public fields
 
-        public string Ip { get; private set; }
-        public int Port { get; private set; }
+        private string mIp = string.Empty;
+        public string Ip 
+        { 
+            get { return mIp; }
+            private set
+            {
+                if (mIp.Equals(value))
+                    return;
+
+                mIp = value;
+                RecreateTcpClient();
+            } 
+        }
+
+        private int mPort;
+        public int Port 
+        { 
+            get { return mPort; }
+            private set
+            {
+                if (mPort == value)
+                    return;
+
+                mPort = value;
+                RecreateTcpClient();
+            } 
+        }
+
 
         private bool mIsConnected = false;
         public bool IsConnected 
@@ -208,6 +242,29 @@ namespace QuickCode.Services
                     return;
                 }
             });
+        }
+
+        private void RecreateTcpClient()
+        {
+            if (mTcpClient == null)
+                return;
+
+            if (!mTcpClient.Connected)
+            {
+                mLogger.LogInformation("The client's address has been changed");
+            }
+
+            if (mTcpClient.Connected)
+            {
+                mTcpClient.Disconnect(true);
+                mLogger.LogInformation("The connection was interrupted to change the client's address");
+            }
+
+            Unsubscribe();
+            mTcpClient.Dispose();
+            mTcpClient = null;
+            mTcpClient = new WatsonTcpClient(Ip, Port);
+            Subscribe();
         }
 
         #endregion

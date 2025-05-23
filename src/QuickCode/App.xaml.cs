@@ -48,13 +48,9 @@ namespace QuickCode
             containerRegistry.RegisterServices((services) =>
             {
                 ConfigurationBuilder configurationBuilder = new();
-                configurationBuilder.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+                configurationBuilder.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
                 IConfigurationRoot configuration = configurationBuilder.Build();
-
-                AppSettingService appSettingService = new();
-                IConfigurationSection appSettingsSection = configuration.GetSection("AppSettingsOptions");
-                appSettingsSection.Bind(appSettingService);
-                services.AddSingleton<IAppSettingService>(appSettingService);
+                services.Configure<AppSettings>(configuration.GetSection(nameof(AppSettings)));
 
                 services.AddLogging(loggingBuilder =>
                 {

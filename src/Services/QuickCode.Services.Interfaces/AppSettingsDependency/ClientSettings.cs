@@ -1,4 +1,4 @@
-﻿namespace QuickCode.Services.Interfaces.IAppSettingsServiceDependency
+﻿namespace QuickCode.Services.Interfaces.AppSettingsDependency
 {
     public class ClientSettings
     {
