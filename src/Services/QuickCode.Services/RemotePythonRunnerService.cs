@@ -109,7 +109,7 @@ namespace QuickCode.Services
             get { return mIp; }
             private set
             {
-                if (mIp.Equals(value))
+                if (value.Equals(mIp))
                     return;
 
                 mIp = value;
@@ -123,7 +123,7 @@ namespace QuickCode.Services
             get { return mPort; }
             private set
             {
-                if (mPort == value)
+                if (value == mPort)
                     return;
 
                 mPort = value;
@@ -138,7 +138,7 @@ namespace QuickCode.Services
             get { return mIsConnected; }
             set 
             {
-                if (mIsConnected == value) 
+                if (value == mIsConnected) 
                     return;
 
                 mIsConnected = value;
