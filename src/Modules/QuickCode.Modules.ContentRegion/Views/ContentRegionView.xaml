@@ -19,44 +19,43 @@
         <StackPanel Grid.Row="0" Grid.ColumnSpan="3" Orientation="Horizontal" >
             
             <Button 
-                Width="80"                
-                Margin="20 0 10 0"
+                Margin="10 0 0 0"
                 HorizontalAlignment="Left"
-                Content="Start" 
-                Command="{Binding StartCommand}"
-                IsEnabled="{Binding IsConnected, Converter={StaticResource Boolean2BooleanReConverter}}"
-                Style="{DynamicResource ButtonDefault.Small}"/>
-
-            <CheckBox Content="Enable Debug"
-                      VerticalAlignment="Center"
-                      IsEnabled="{Binding IsConnected, Converter={StaticResource Boolean2BooleanReConverter}}"
-                      IsChecked="{Binding EnableDebug}"
-                      />
+                ToolTip="Start execute code without debug"
+                Command="{Binding CodeExecuteCommand}"
+                CommandParameter="false"
+                Style="{DynamicResource ButtonIcon}"
+                hc:IconElement.Geometry="M53.125 162.5L67.7 170.3L167.7 103.6375V88.0375L67.7 21.3625L53.125 29.1625V162.5zM71.875 144.9875V46.6875L145.6 95.8375L71.875 144.9875z"/>
 
             <Button 
-                Width="80"
-                Margin="10 0 10 0"
                 HorizontalAlignment="Left"
-                Content="Stop" 
+                ToolTip="Start execute code with debug (pdb)"
+                Command="{Binding CodeExecuteCommand}"
+                CommandParameter="true"
+                Style="{DynamicResource ButtonIcon}"
+                hc:IconElement.Geometry="M31.25 175H50V25H31.25V175zM92.95 170.125L78.125 162.5V37.5L92.95 29.875L180.45 92.375V107.625L92.95 170.125zM158.875 100L96.875 55.7125V144.2875L158.875 100z"/>
+
+            <Button 
+                
+                HorizontalAlignment="Left"
+                ToolTip="Stop code execute"
                 Command="{Binding StopCommand}"
-                Style="{DynamicResource ButtonDefault.Small}"/>
+                Style="{DynamicResource ButtonIcon}"
+                hc:IconElement.Geometry="M162.5 175.003L175 162.503V37.5025L162.5 25.0025H37.5L25 37.5025L25 162.503L37.5 175.003H162.5zM159.32625 159.367875L40.683625 159.367875L40.683625 40.62H159.32625V159.367875z"/>
 
             <Button 
-                Width="40"                
-                Margin="10 0 10 0"
                 HorizontalAlignment="Left"
-                Content="next" 
-                IsEnabled="{Binding EnableDebug}"
+                ToolTip="Next step"
                 Command="{Binding SendDebuggerCommand}"
                 CommandParameter="n"
-                Style="{DynamicResource ButtonDefault.Small}"/>
+                Style="{DynamicResource ButtonIcon}"
+                hc:IconElement.Geometry="M12,22A2,2 0 0,1 10,20A2,2 0 0,1 12,18A2,2 0 0,1 14,20A2,2 0 0,1 12,22M13,2V13L17.5,8.5L18.92,9.92L12,16.84L5.08,9.92L6.5,8.5L11,13V2H13Z"/>
 
             <Button 
                 Width="40"                
                 Margin="10 0 10 0"
                 HorizontalAlignment="Left"
                 Content="llist" 
-                IsEnabled="{Binding EnableDebug}"
                 Command="{Binding SendDebuggerCommand}"
                 CommandParameter="ll"
                 Style="{DynamicResource ButtonDefault.Small}"/>
@@ -64,20 +63,11 @@
             <Button Width="50"    
                     Margin="10 0 10 0"
                     HorizontalAlignment="Left"
-                    Content="restart"
-                    IsEnabled="{Binding EnableDebug}"
+                    ToolTip="Restart debug"
                     Command="{Binding SendDebuggerCommand}"
                     CommandParameter="restart"
-                    Style="{DynamicResource ButtonDefault.Small}"/>
-
-            <Button Width="40"
-                    Margin="10 0 10 0"
-                    HorizontalAlignment="Left"
-                    Content="quit" 
-                    IsEnabled="{Binding EnableDebug}"
-                    Command="{Binding SendDebuggerCommand}"
-                    CommandParameter="q"
-                    Style="{DynamicResource ButtonDefault.Small}"/>
+                    Style="{DynamicResource ButtonIcon}"
+                    hc:IconElement.Geometry="M159.375 100A56.25 56.25 0 0 0 51.75 77.075L34.3625 70.0125A75.0125 75.0125 0 0 1 178.125 100A75 75 0 0 1 43.75 145.825V168.75H25V118.75L34.375 109.375H78.125V128.125H54.4A56.25 56.25 0 0 0 159.375 100z"/>
 
             <CheckBox Content="IsConnected"
                       HorizontalAlignment="Right"

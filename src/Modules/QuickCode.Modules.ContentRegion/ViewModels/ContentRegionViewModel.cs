@@ -13,7 +13,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
     {
         #region DelegateCommand
 
-        public DelegateCommand StartCommand { get; }
+        public DelegateCommand<object> CodeExecuteCommand { get; }
         public DelegateCommand StopCommand { get; }
         public DelegateCommand<object> SendDebuggerCommand { get; }
 
@@ -39,7 +39,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             mLogger = serviceProvider.GetService<ILogger<ContentRegionViewModel>>();
             mRemotePythonRunner = serviceProvider.GetService<IRemotePythonRunnerService>();
 
-            StartCommand = new DelegateCommand(Start, StartCanExecute);
+            CodeExecuteCommand = new DelegateCommand<object>(CodeExecute, CodeExecuteCanExecute);
             StopCommand = new DelegateCommand(Stop, StopCanExecute);
             SendDebuggerCommand = new DelegateCommand<object>(SendDebugger, SendDebuggerCanExecute);
 
@@ -97,7 +97,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
                 var isNewValue= SetProperty(ref mSourceCode, value);
 
                 if (isNewValue)
-                    StartCommand.RaiseCanExecuteChanged();
+                    CodeExecuteCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -111,13 +111,13 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             }
         }
 
-        public bool mEnableDebug = false;
-        public bool EnableDebug
+        public bool mIsDebugEnable = false;
+        public bool IsDebugEnable
         {
-            get { return mEnableDebug; }
+            get { return mIsDebugEnable; }
             set
             {
-                SetProperty(ref mEnableDebug, value);
+                SetProperty(ref mIsDebugEnable, value);
             }
         }
 
@@ -131,6 +131,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
                 if (isNewValue)
                 {
+                    CodeExecuteCommand.RaiseCanExecuteChanged();
                     StopCommand.RaiseCanExecuteChanged();
                     SendDebuggerCommand.RaiseCanExecuteChanged();
                 }
@@ -150,14 +151,19 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         #region DelegateCommand methods
 
-        private async void Start()
+        private async void CodeExecute(object withDebug)
         {
+            bool parseResult = bool.TryParse(withDebug.ToString(), out bool isDebugEnable);
+            if (parseResult) 
+                IsDebugEnable = isDebugEnable;
+
             ExecutionResult = string.Empty;
             string sourceCode = SourceCode;
+            mIsExecutionStop = false;
 
             try
             {
-                await mRemotePythonRunner.ConnectAndSendCodeAsync(sourceCode, EnableDebug);
+                await mRemotePythonRunner.ConnectAndSendCodeAsync(sourceCode, IsDebugEnable);
             }
             catch (TimeoutException)
             {
@@ -167,18 +173,16 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             {
                 mLogger.LogError("{error}", ex);
             }
-            
-            mIsExecutionStop = false;
         }
 
-        private bool StartCanExecute()
+        private bool CodeExecuteCanExecute(object withDebug)
         {
-            return !string.IsNullOrEmpty(SourceCode);
+            return !string.IsNullOrEmpty(SourceCode) && !IsConnected;
         }
 
         private void Stop()
         {
-            mRemotePythonRunner.DisconnectAsync(EnableDebug);
+            mRemotePythonRunner.DisconnectAsync(IsDebugEnable);
             mIsExecutionStop= true; 
         }
 
@@ -195,7 +199,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private bool SendDebuggerCanExecute(object arg)
         {
-            return IsConnected && EnableDebug;
+            return IsConnected && IsDebugEnable;
         }
 
         #endregion
