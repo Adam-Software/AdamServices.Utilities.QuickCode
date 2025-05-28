@@ -153,6 +153,12 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private async void CodeExecute(object withDebug)
         {
+            if (IsConnected && IsDebugEnable) 
+            {
+                await mRemotePythonRunner.SendСontrolCharacter("s");
+                return;
+            }
+
             bool parseResult = bool.TryParse(withDebug.ToString(), out bool isDebugEnable);
             if (parseResult) 
                 IsDebugEnable = isDebugEnable;
@@ -177,6 +183,11 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private bool CodeExecuteCanExecute(object withDebug)
         {
+            _ = bool.TryParse(withDebug.ToString(), out bool isDebugEnable);
+
+            if (IsConnected && IsDebugEnable && isDebugEnable)
+                return true;
+
             return !string.IsNullOrEmpty(SourceCode) && !IsConnected;
         }
 
