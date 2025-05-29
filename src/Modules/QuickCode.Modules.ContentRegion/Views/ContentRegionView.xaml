@@ -40,11 +40,11 @@
 
             <Button 
                 HorizontalAlignment="Left"
-                ToolTip="{Binding Path=IsConnected, Mode=TwoWay, Converter={StaticResource BooleanToTooltipTextConverter}}"
+                ToolTip="{Binding Path=IsDebugEnable, Mode=TwoWay, Converter={StaticResource BooleanToTooltipTextConverter}}"
                 Command="{Binding CodeExecuteCommand}"
                 CommandParameter="true"
                 Style="{DynamicResource ButtonIcon.Small}"
-                hc:IconElement.Geometry="{Binding Path=IsConnected, Mode=TwoWay, Converter={StaticResource BooleanToDebugIconGeometryConverter}}"
+                hc:IconElement.Geometry="{Binding Path=IsDebugEnable, Mode=TwoWay, Converter={StaticResource BooleanToDebugIconGeometryConverter}}"
                 hc:IconElement.Height="14"
                 hc:IconElement.Width="14"
                 Foreground="DarkGreen"/>

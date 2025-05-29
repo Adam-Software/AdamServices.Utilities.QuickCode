@@ -5,6 +5,7 @@ using QuickCode.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using WatsonTcp;
 
@@ -39,6 +40,7 @@ namespace QuickCode.Services
             Port = appSettingsMonitor.CurrentValue.ClientSettings.Port;
             
             mTcpClient = new WatsonTcpClient(Ip, Port);
+
             appSettingsMonitor.OnChange(OnChangeClientSettings);
             Subscribe();
 
@@ -69,7 +71,6 @@ namespace QuickCode.Services
             mTcpClient.Events.MessageReceived -= MessageReceived;
             mTcpClient.Events.ExceptionEncountered -= ExceptionEncountered;
             mTcpClient.Events.ServerDisconnected -= ServerDisconnected;
-            
         }
 
         #endregion
@@ -78,25 +79,68 @@ namespace QuickCode.Services
 
         private void ServerConnected(object sender, ConnectionEventArgs e)
         {
-            mLogger.LogInformation("Client connected");
             IsConnected = true;
+            mLogger.LogInformation("");
+            mLogger.LogInformation("Client connected");
         }
 
         private void ServerDisconnected(object sender, DisconnectionEventArgs e)
         {
-            mLogger.LogInformation("Client disconected");
             IsConnected = false;
+            mLogger.LogInformation("Client disconected");
+            mLogger.LogInformation("");
         }
 
         private void ExceptionEncountered(object sender, ExceptionEventArgs e)
         {
-            mLogger.LogInformation("{error}", e.Exception.Message);
+            if(e.Exception is ObjectDisposedException)
+            {
+                mLogger.LogError("ExceptionEncountered thow ObjectDisposedException");                
+                return;
+            }
+
+            if (e.Exception is OperationCanceledException)
+            {
+                mLogger.LogError("ExceptionEncountered thow OperationCanceledException");
+                CheckClientDisconected();
+                return;
+            }
+
+            mLogger.LogError("ExceptionEncountered {error}", e.Exception);
         }
+
+        private void CheckClientDisconected()
+        {
+            Task.Run(async () =>
+            {
+                await Task.Delay(100);
+
+                if(mTcpClient.Connected)
+                {
+                    mLogger.LogError("Client coonected after thow OperationCanceledException");
+                    mTcpClient.Disconnect();
+                }
+                else
+                {
+                    mLogger.LogError("Client dicoonected after thow OperationCanceledException");
+                    IsConnected = false;
+                } 
+            });
+        }
+
 
         private void MessageReceived(object sender, MessageReceivedEventArgs e)
         {
-            var message = System.Text.Encoding.Default.GetString(e.Data);
-            OnRaiseClientDataReceivedEvent(message);
+            try
+            {
+                var message = System.Text.Encoding.UTF8.GetString(e.Data);
+                OnRaiseClientDataReceivedEvent(message);
+            }
+            catch (Exception ex) 
+            {
+                mLogger.LogError("MessageReceived {error}", ex);
+            }
+            
         }
 
         #endregion
@@ -157,13 +201,28 @@ namespace QuickCode.Services
             if (withDebug)
                 messageType = "debug_source_code";
 
-            await ConnectAsync();
-
-            if (!mTcpClient.Connected)
-                throw new TimeoutException();
-
-            var code = new Dictionary<string, object>() { { messageType, sourceCode } };
-            _ = await mTcpClient.SendAsync("", code);
+            try
+            {
+                mTcpClient.Connect();
+                var code = new Dictionary<string, object>() { { messageType, sourceCode } };
+                _ = await mTcpClient.SendAsync("", code);
+            }
+            catch (TimeoutException ex)
+            {
+                mLogger.LogError("{error}", ex.Message);
+                mLogger.LogError("Remote python service unaviable");
+                throw;
+            }
+            catch (SocketException ex)
+            {
+                mLogger.LogError("{error}", ex.Message);
+                mLogger.LogError("Socket exception because remote python service unaviable");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                mLogger.LogError("ConnectAndSendCodeAsync {error}", ex.Message);
+            }
         }
 
 
@@ -173,7 +232,14 @@ namespace QuickCode.Services
 
             if (mTcpClient.Connected)
             {
-                _ = await mTcpClient.SendAsync("", character);
+                try
+                {
+                    _ = await mTcpClient.SendAsync("", character);
+                }
+                catch (Exception ex)
+                {
+                    mLogger.LogError("SendСontrolCharacter {ex}", ex);
+                }
             }
         }
 
@@ -185,7 +251,20 @@ namespace QuickCode.Services
                 return;
             }
 
-            mTcpClient.Disconnect();
+            try
+            {
+                mTcpClient.Disconnect(true);
+            }
+            catch (InvalidOperationException)
+            {
+                mLogger.LogError("DisconnectAsync thow InvalidOperationException");
+                IsConnected = false;
+            }
+            catch (Exception ex)
+            {
+                mLogger.LogError("DisconnectAsync {ex}", ex);
+            }
+            
         }
 
         public void Dispose()
@@ -216,10 +295,10 @@ namespace QuickCode.Services
             }
         }
 
-        private async Task ConnectAsync()
+        private void ConnectAsync()
         {
-            await Task.Run(() =>
-            {
+            //return Task.Run(() =>
+            //{
                 try
                 {
                     mTcpClient.Connect();
@@ -241,7 +320,7 @@ namespace QuickCode.Services
                     mLogger.LogError("{error}", ex.Message);
                     return;
                 }
-            });
+            //});
         }
 
         private void RecreateTcpClient()

@@ -4,7 +4,12 @@
         xmlns:prism="http://prismlibrary.com/"
         prism:ViewModelLocator.AutoWireViewModel="True"
         xmlns:core="clr-namespace:QuickCode.Core;assembly=QuickCode.Core"
-        Title="{Binding Title}" Height="350" Width="525" >
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        WindowStartupLocation="CenterOwner"
+        WindowState="Maximized"
+        Title="{Binding Title}">
+    
+    
     <Grid>
         <ContentControl prism:RegionManager.RegionName="{x:Static core:RegionNames.ContentRegion}" />
     </Grid>

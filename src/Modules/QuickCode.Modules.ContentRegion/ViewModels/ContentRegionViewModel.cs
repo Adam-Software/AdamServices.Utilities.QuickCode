@@ -4,6 +4,7 @@ using Prism.Commands;
 using QuickCode.Core.Mvvm;
 using QuickCode.Services.Interfaces;
 using System;
+using System.Net.Sockets;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -74,14 +75,20 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
         {
             Application.Current?.Dispatcher?.BeginInvoke(DispatcherPriority.Background, new Action(() =>
             {
-               if(!mIsExecutionStop && IsConnected)              
+               if(!mIsExecutionStop && IsConnected)
+                {
                     ExecutionResult = ExecutionResult + $"{data}\n";
+
+                } 
             }));
         }
 
         private void RaiseIsConnectedChangeEvent(object sender)
         {
             IsConnected = mRemotePythonRunner.IsConnected;
+
+            if(!IsConnected)
+                ExecutionResult = ExecutionResult + "Debug sessoin ended";
         }
 
         #endregion
@@ -175,6 +182,10 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             {
                 ExecutionResult = $"Не могу подключиться к серверу по указаному адресу {mRemotePythonRunner.Ip}:{mRemotePythonRunner.Port}";
             }
+            catch (SocketException)
+            {
+                ExecutionResult = $"Не могу подключиться к серверу по указаному адресу {mRemotePythonRunner.Ip}:{mRemotePythonRunner.Port}";
+            }
             catch(Exception ex) 
             {
                 mLogger.LogError("{error}", ex);
@@ -194,7 +205,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
         private void Stop()
         {
             mRemotePythonRunner.DisconnectAsync(IsDebugEnable);
-            mIsExecutionStop= true; 
+            mIsExecutionStop = true;
         }
 
         private bool StopCanExecute()
