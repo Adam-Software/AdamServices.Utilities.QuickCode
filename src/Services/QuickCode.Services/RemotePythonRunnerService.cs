@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using QuickCode.Services.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -80,7 +81,6 @@ namespace QuickCode.Services
         private void ServerConnected(object sender, ConnectionEventArgs e)
         {
             IsConnected = true;
-            mLogger.LogInformation("");
             mLogger.LogInformation("Client connected");
         }
 
@@ -88,12 +88,17 @@ namespace QuickCode.Services
         {
             IsConnected = false;
             mLogger.LogInformation("Client disconected");
-            mLogger.LogInformation("");
         }
 
         private void ExceptionEncountered(object sender, ExceptionEventArgs e)
         {
-            if(e.Exception is ObjectDisposedException)
+            if (e.Exception is IOException)
+            {
+                mLogger.LogError("ExceptionEncountered thow IOException");
+                return;
+            }
+            
+            if (e.Exception is ObjectDisposedException)
             {
                 mLogger.LogError("ExceptionEncountered thow ObjectDisposedException");                
                 return;
@@ -102,14 +107,14 @@ namespace QuickCode.Services
             if (e.Exception is OperationCanceledException)
             {
                 mLogger.LogError("ExceptionEncountered thow OperationCanceledException");
-                CheckClientDisconected();
+                //CheckClientDisconected();
                 return;
             }
 
             mLogger.LogError("ExceptionEncountered {error}", e.Exception);
         }
 
-        private void CheckClientDisconected()
+        /*private void CheckClientDisconected()
         {
             Task.Run(async () =>
             {
@@ -126,7 +131,7 @@ namespace QuickCode.Services
                     IsConnected = false;
                 } 
             });
-        }
+        }*/
 
 
         private void MessageReceived(object sender, MessageReceivedEventArgs e)
@@ -228,32 +233,38 @@ namespace QuickCode.Services
 
         public async Task SendСontrolCharacter(string controlCharacter)
         {   
+            if(!mTcpClient.Connected)
+                return;
+
             var character = new Dictionary<string, object>() { { "control_characters", controlCharacter } };
 
-            if (mTcpClient.Connected)
+            try
             {
-                try
-                {
-                    _ = await mTcpClient.SendAsync("", character);
-                }
-                catch (Exception ex)
-                {
-                    mLogger.LogError("SendСontrolCharacter {ex}", ex);
-                }
+                _ = await mTcpClient.SendAsync("", character);
             }
+            catch (Exception ex)
+            {
+                mLogger.LogError("SendСontrolCharacter {ex}", ex);
+            } 
         }
 
         public async Task DisconnectAsync(bool withDebug = false)
         {
+            if (!mTcpClient.Connected)
+                return;
+
             if (withDebug)
             {
                 await SendСontrolCharacter("q");
                 return;
             }
 
+            var exit = new Dictionary<string, object>() { { "exit", "" } };
+
             try
             {
-                mTcpClient.Disconnect(true);
+                await mTcpClient.SendAsync("", exit);
+                //mTcpClient.Disconnect(true);
             }
             catch (InvalidOperationException)
             {

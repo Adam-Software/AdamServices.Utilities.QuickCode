@@ -78,7 +78,6 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
                if(!mIsExecutionStop && IsConnected)
                 {
                     ExecutionResult = ExecutionResult + $"{data}\n";
-
                 } 
             }));
         }
