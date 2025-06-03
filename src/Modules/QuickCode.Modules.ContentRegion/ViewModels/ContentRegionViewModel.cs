@@ -3,7 +3,9 @@ using Microsoft.Extensions.Logging;
 using Prism.Commands;
 using QuickCode.Core.Mvvm;
 using QuickCode.Services.Interfaces;
+using QuickCode.Services.Interfaces.RemotePythonRunnerServiceDependency.JsonModel;
 using System;
+using System.Linq;
 using System.Net.Sockets;
 using System.Windows;
 using System.Windows.Threading;
@@ -77,7 +79,9 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             {
                if(!mIsExecutionStop && IsConnected)
                 {
-                    ExecutionResult = ExecutionResult + $"{data}\n";
+                    ExecutionResult += $"{data}\n";
+                    
+                   
                 } 
             }));
         }
@@ -87,7 +91,21 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             IsConnected = mRemotePythonRunner.IsConnected;
 
             if(!IsConnected)
-                ExecutionResult = ExecutionResult + "Debug sessoin ended";
+            {
+                ExitData exitData = mRemotePythonRunner.ExitData;
+
+                if(exitData.IsExitDataUpdated) 
+                    ExecutionResult += $"Debug sessoin ended.\n" +
+                        $"Exit code {exitData.ExitCode}\n" +
+                        $"Process Id {exitData.ProcessId}\n" +
+                        $"Start Time {exitData.StartTime}\n" +
+                        $"Exit Time {exitData.ExitTime}\n" +
+                        $"Total Processor Time {exitData.TotalProcessorTime}\n" +
+                        $"User Processor Time {exitData.UserProcessorTime}";
+                else
+                    ExecutionResult += $"Debug sessoin ended.";
+            }
+                
         }
 
         #endregion

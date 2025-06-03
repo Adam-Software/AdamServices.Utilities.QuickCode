@@ -2,11 +2,11 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QuickCode.Services.Interfaces;
+using QuickCode.Services.Interfaces.RemotePythonRunnerServiceDependency.JsonModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 using WatsonTcp;
 
@@ -48,11 +48,7 @@ namespace QuickCode.Services
             mLogger.LogInformation("Service run on {ip}:{port}", Ip, Port);
         }
 
-        private void OnChangeClientSettings(AppSettings settings, string arg2)
-        {
-            Ip = settings.ClientSettings.Ip;
-            Port = settings.ClientSettings.Port;
-        }
+
 
         #endregion
 
@@ -81,12 +77,15 @@ namespace QuickCode.Services
         private void ServerConnected(object sender, ConnectionEventArgs e)
         {
             IsConnected = true;
+            ExitData = new();
+
             mLogger.LogInformation("Client connected");
         }
 
         private void ServerDisconnected(object sender, DisconnectionEventArgs e)
         {
             IsConnected = false;
+
             mLogger.LogInformation("Client disconected");
         }
 
@@ -107,35 +106,17 @@ namespace QuickCode.Services
             if (e.Exception is OperationCanceledException)
             {
                 mLogger.LogError("ExceptionEncountered thow OperationCanceledException");
-                //CheckClientDisconected();
                 return;
             }
 
             mLogger.LogError("ExceptionEncountered {error}", e.Exception);
         }
 
-        /*private void CheckClientDisconected()
-        {
-            Task.Run(async () =>
-            {
-                await Task.Delay(100);
-
-                if(mTcpClient.Connected)
-                {
-                    mLogger.LogError("Client coonected after thow OperationCanceledException");
-                    mTcpClient.Disconnect();
-                }
-                else
-                {
-                    mLogger.LogError("Client dicoonected after thow OperationCanceledException");
-                    IsConnected = false;
-                } 
-            });
-        }*/
-
-
         private void MessageReceived(object sender, MessageReceivedEventArgs e)
         {
+            if (e.Metadata != null)
+                MetadataReceived(e.Metadata);
+
             try
             {
                 var message = System.Text.Encoding.UTF8.GetString(e.Data);
@@ -144,8 +125,42 @@ namespace QuickCode.Services
             catch (Exception ex) 
             {
                 mLogger.LogError("MessageReceived {error}", ex);
+            }   
+        }
+
+        private ExitData mExitdata = new();
+
+        public ExitData ExitData
+        {
+            get { return mExitdata; }
+            set 
+            { 
+                if(value == null)
+                    return; 
+
+                mExitdata = value; 
             }
-            
+        }
+
+        private void MetadataReceived(Dictionary<string, object> metadata)
+        {
+            foreach (var key in metadata.Keys)
+            {
+                switch (key)
+                {
+                    case "exitData":
+                        {
+                            ExitData = mTcpClient.SerializationHelper.DeserializeJson<ExitData>(metadata[key].ToString());
+                            break;
+                        }
+                }
+            }
+        }
+
+        private void OnChangeClientSettings(AppSettings settings, string arg2)
+        {
+            Ip = settings.ClientSettings.Ip;
+            Port = settings.ClientSettings.Port;
         }
 
         #endregion

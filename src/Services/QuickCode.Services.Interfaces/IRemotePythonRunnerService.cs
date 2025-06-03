@@ -1,4 +1,5 @@
-﻿using System;
+﻿using QuickCode.Services.Interfaces.RemotePythonRunnerServiceDependency.JsonModel;
+using System;
 using System.Threading.Tasks;
 
 namespace QuickCode.Services.Interfaces
@@ -16,7 +17,7 @@ namespace QuickCode.Services.Interfaces
         public Task SendСontrolCharacter(string controlCharacter);
         public Task ConnectAndSendCodeAsync(string sourceCode, bool withDebug = false);
         public Task DisconnectAsync(bool withDebug = false);
-
+        public ExitData ExitData { get; }
         public bool IsConnected { get; }
         public string Ip { get; }
         public int Port { get; }

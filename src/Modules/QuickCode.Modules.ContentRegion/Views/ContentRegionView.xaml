@@ -111,6 +111,6 @@
                  TextWrapping="Wrap"
                  IsReadOnly="True"
                  VerticalContentAlignment="Top"
-                 Text="{Binding ExecutionResult, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                 Text="{Binding ExecutionResult, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
     </Grid>
 </UserControl>
