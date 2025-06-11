@@ -57,7 +57,8 @@
                 hc:IconElement.Geometry="M 24 24 L 24 52 L 52 52 L 52 24 L 24 24 z "
                 hc:IconElement.Height="14"
                 hc:IconElement.Width="14"
-                Foreground="{Binding Path=IsConnected, Mode=TwoWay, Converter={StaticResource BooleanToDebugColorConverter}}"/>
+                
+                Foreground="{Binding Path=IsConnected, Mode=OneWay, Converter={StaticResource BooleanToDebugColorConverter}}"/>
 
             <Button 
                 HorizontalAlignment="Left"

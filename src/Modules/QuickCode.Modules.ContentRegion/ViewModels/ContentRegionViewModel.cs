@@ -7,6 +7,7 @@ using QuickCode.Services.Interfaces.RemotePythonRunnerServiceDependency.JsonMode
 using System;
 using System.Linq;
 using System.Net.Sockets;
+using System.Threading.Channels;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -30,8 +31,8 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
         #endregion
 
         #region Var
+        readonly ChannelReader<string> channel;
 
-        private bool mIsExecutionStop = false;
 
         #endregion
 
@@ -55,6 +56,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private void Subscribe()
         {
+            
             mRemotePythonRunner.RaiseDataReceivedEvent += RaiseDataReceivedEvent;
             mRemotePythonRunner.RaiseIsConnectedChangeEvent += RaiseIsConnectedChangeEvent;
         }
@@ -75,37 +77,42 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private void RaiseDataReceivedEvent(object sender, string data)
         {
+            UpdateExecutionResultBackground(data);
+        }
+
+        private void UpdateExecutionResultBackground(string data, bool isExitData = false)
+        {
             Application.Current?.Dispatcher?.BeginInvoke(DispatcherPriority.Background, new Action(() =>
             {
-               if(!mIsExecutionStop && IsConnected)
-                {
+                if (!IsExecutionStop)
                     ExecutionResult += $"{data}\n";
-                    
-                   
-                } 
+
+                if(isExitData)
+                    IsExecutionStop = true;
             }));
         }
 
         private void RaiseIsConnectedChangeEvent(object sender)
         {
             IsConnected = mRemotePythonRunner.IsConnected;
-
-            if(!IsConnected)
+            
+            if (!IsConnected)
             {
                 ExitData exitData = mRemotePythonRunner.ExitData;
+                var executionResult = $"Debug sessoin ended.";
 
-                if(exitData.IsExitDataUpdated) 
-                    ExecutionResult += $"Debug sessoin ended.\n" +
+
+                if (exitData.IsExitDataUpdated) 
+                    executionResult = $"Debug sessoin ended.\n" +
                         $"Exit code {exitData.ExitCode}\n" +
                         $"Process Id {exitData.ProcessId}\n" +
                         $"Start Time {exitData.StartTime}\n" +
                         $"Exit Time {exitData.ExitTime}\n" +
                         $"Total Processor Time {exitData.TotalProcessorTime}\n" +
                         $"User Processor Time {exitData.UserProcessorTime}";
-                else
-                    ExecutionResult += $"Debug sessoin ended.";
+
+                UpdateExecutionResultBackground(executionResult, true);
             }
-                
         }
 
         #endregion
@@ -149,16 +156,34 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
         public bool IsConnected
         {
             get { return mIsConnected; }
-            set 
-            { 
+            set
+            {
                 var isNewValue = SetProperty(ref mIsConnected, value);
 
-                if (isNewValue)
-                {
-                    CodeExecuteCommand.RaiseCanExecuteChanged();
-                    StopCommand.RaiseCanExecuteChanged();
-                    SendDebuggerCommand.RaiseCanExecuteChanged();
-                }
+                if (!isNewValue)
+                    return;
+
+                CodeExecuteCommand.RaiseCanExecuteChanged();
+                StopCommand.RaiseCanExecuteChanged();
+                SendDebuggerCommand.RaiseCanExecuteChanged();
+
+            }
+        }
+
+        private bool mIsExecutionStop = true;
+        public bool IsExecutionStop
+        {
+            get { return mIsExecutionStop; }
+            set
+            {
+                bool isNewValue = SetProperty(ref mIsExecutionStop, value);
+
+                if (!isNewValue)
+                    return;
+
+                CodeExecuteCommand.RaiseCanExecuteChanged();
+                StopCommand.RaiseCanExecuteChanged();
+                SendDebuggerCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -187,9 +212,9 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             if (parseResult) 
                 IsDebugEnable = isDebugEnable;
 
-            ExecutionResult = string.Empty;
+            UpdateExecutionResultBackground(string.Empty);
             string sourceCode = SourceCode;
-            mIsExecutionStop = false;
+            IsExecutionStop = false;
 
             try
             {
@@ -197,11 +222,11 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             }
             catch (TimeoutException)
             {
-                ExecutionResult = $"Не могу подключиться к серверу по указаному адресу {mRemotePythonRunner.Ip}:{mRemotePythonRunner.Port}";
+                UpdateExecutionResultBackground($"Не могу подключиться к серверу по указаному адресу {mRemotePythonRunner.Ip}:{mRemotePythonRunner.Port}");
             }
             catch (SocketException)
             {
-                ExecutionResult = $"Не могу подключиться к серверу по указаному адресу {mRemotePythonRunner.Ip}:{mRemotePythonRunner.Port}";
+                UpdateExecutionResultBackground($"Не могу подключиться к серверу по указаному адресу {mRemotePythonRunner.Ip}:{mRemotePythonRunner.Port}");
             }
             catch(Exception ex) 
             {
@@ -216,18 +241,20 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             if (IsConnected && IsDebugEnable && isDebugEnable)
                 return true;
 
-            return !string.IsNullOrEmpty(SourceCode) && !IsConnected;
+            //return !string.IsNullOrEmpty(SourceCode) && !IsConnected;
+            return !string.IsNullOrEmpty(SourceCode) && IsExecutionStop;
         }
 
         private void Stop()
         {
             mRemotePythonRunner.DisconnectAsync(IsDebugEnable);
-            mIsExecutionStop = true;
+            IsExecutionStop = true;
         }
 
         private bool StopCanExecute()
         {
-            return IsConnected;
+            //return IsConnected;
+            return !IsExecutionStop;
         }
 
         private void SendDebugger(object commandParam)
