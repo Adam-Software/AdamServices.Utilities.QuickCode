@@ -7,6 +7,7 @@ using QuickCode.Services.Interfaces.RemotePythonRunnerServiceDependency.JsonMode
 using System;
 using System.Linq;
 using System.Net.Sockets;
+using System.Security.Cryptography.Xml;
 using System.Threading.Channels;
 using System.Windows;
 using System.Windows.Threading;
@@ -31,8 +32,6 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
         #endregion
 
         #region Var
-        readonly ChannelReader<string> channel;
-
 
         #endregion
 
@@ -56,7 +55,6 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private void Subscribe()
         {
-            
             mRemotePythonRunner.RaiseDataReceivedEvent += RaiseDataReceivedEvent;
             mRemotePythonRunner.RaiseIsConnectedChangeEvent += RaiseIsConnectedChangeEvent;
         }
@@ -85,7 +83,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             Application.Current?.Dispatcher?.BeginInvoke(DispatcherPriority.Background, new Action(() =>
             {
                 if (!IsExecutionStop)
-                    ExecutionResult += $"{data}\n";
+                    ExecutionResult.AppendLine(data);// += $"{data}\n";
 
                 if(isExitData)
                     IsExecutionStop = true;
@@ -111,6 +109,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
                         $"Total Processor Time {exitData.TotalProcessorTime}\n" +
                         $"User Processor Time {exitData.UserProcessorTime}";
 
+                //ExecutionResult.AppendLine(executionResult);
                 UpdateExecutionResultBackground(executionResult, true);
             }
         }
@@ -132,15 +131,15 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             }
         }
 
-        private string mExecutionResult = string.Empty;
-        public string ExecutionResult
-        {
+        //private BindableStringBuilder mExecutionResult = string.Empty;
+        public BindableStringBuilder ExecutionResult {  get; } = new BindableStringBuilder();
+        /*{
             get { return mExecutionResult; }
             set
             {
                 SetProperty(ref mExecutionResult, value);
             }
-        }
+        }*/
 
         public bool mIsDebugEnable = false;
         public bool IsDebugEnable
@@ -241,7 +240,6 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             if (IsConnected && IsDebugEnable && isDebugEnable)
                 return true;
 
-            //return !string.IsNullOrEmpty(SourceCode) && !IsConnected;
             return !string.IsNullOrEmpty(SourceCode) && IsExecutionStop;
         }
 
@@ -253,7 +251,6 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private bool StopCanExecute()
         {
-            //return IsConnected;
             return !IsExecutionStop;
         }
 
