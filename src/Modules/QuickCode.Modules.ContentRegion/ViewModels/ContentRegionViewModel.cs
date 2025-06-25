@@ -5,10 +5,7 @@ using QuickCode.Core.Mvvm;
 using QuickCode.Services.Interfaces;
 using QuickCode.Services.Interfaces.RemotePythonRunnerServiceDependency.JsonModel;
 using System;
-using System.Linq;
 using System.Net.Sockets;
-using System.Security.Cryptography.Xml;
-using System.Threading.Channels;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -82,13 +79,21 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
         {
             Application.Current?.Dispatcher?.BeginInvoke(DispatcherPriority.Background, new Action(() =>
             {
-                if (!IsExecutionStop)
-                    ExecutionResult.AppendLine(data);// += $"{data}\n";
-
-                if(isExitData)
+                if (!IsExecutionStop && !isExitData)
+                {
+                    ExecutionResult.AppendLine(data);
+                    return;
+                }
+                    
+                if (isExitData)
+                {
+                    ExecutionResult.AppendLine(data);
                     IsExecutionStop = true;
+                }
             }));
         }
+
+      
 
         private void RaiseIsConnectedChangeEvent(object sender)
         {
@@ -109,7 +114,6 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
                         $"Total Processor Time {exitData.TotalProcessorTime}\n" +
                         $"User Processor Time {exitData.UserProcessorTime}";
 
-                //ExecutionResult.AppendLine(executionResult);
                 UpdateExecutionResultBackground(executionResult, true);
             }
         }
@@ -131,15 +135,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             }
         }
 
-        //private BindableStringBuilder mExecutionResult = string.Empty;
         public BindableStringBuilder ExecutionResult {  get; } = new BindableStringBuilder();
-        /*{
-            get { return mExecutionResult; }
-            set
-            {
-                SetProperty(ref mExecutionResult, value);
-            }
-        }*/
 
         public bool mIsDebugEnable = false;
         public bool IsDebugEnable
@@ -211,7 +207,7 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
             if (parseResult) 
                 IsDebugEnable = isDebugEnable;
 
-            UpdateExecutionResultBackground(string.Empty);
+            ExecutionResult.Clear();
             string sourceCode = SourceCode;
             IsExecutionStop = false;
 

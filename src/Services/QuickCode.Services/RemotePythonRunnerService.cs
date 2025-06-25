@@ -7,7 +7,6 @@ using SimpleUdp;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using WatsonTcp;
@@ -133,17 +132,7 @@ namespace QuickCode.Services
         private void MessageReceived(object sender, MessageReceivedEventArgs e)
         {
             if (e.Metadata != null)
-                MetadataReceived(e.Metadata);
-
-            /*try
-            {
-                var message = System.Text.Encoding.UTF8.GetString(e.Data);
-                OnRaiseClientDataReceivedEvent(message);
-            }
-            catch (Exception ex) 
-            {
-                mLogger.LogError("MessageReceived {error}", ex);
-            } */  
+                MetadataReceived(e.Metadata); 
         }
 
         private void DatagramReceived(object sender, Datagram e)
@@ -302,7 +291,6 @@ namespace QuickCode.Services
             try
             {
                 await mTcpClient.SendAsync("", exitMetadata);
-                //mTcpClient.Disconnect(true);
             }
             catch (InvalidOperationException)
             {
@@ -343,34 +331,6 @@ namespace QuickCode.Services
                 mIsDisposing = true;
             }
         }
-
-        /*private void ConnectAsync()
-        {
-            //return Task.Run(() =>
-            //{
-                try
-                {
-                    mTcpClient.Connect();
-                }
-                catch (TimeoutException ex)
-                {
-                    mLogger.LogError("{error}", ex.Message);
-                    mLogger.LogError("Remote python service unaviable");
-                    return;
-                }
-                catch (SocketException ex)
-                {
-                    mLogger.LogError("{error}", ex.Message);
-                    mLogger.LogError("Socket exception because remote python service unaviable");
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    mLogger.LogError("{error}", ex.Message);
-                    return;
-                }
-            //});
-        }*/
 
         private void RecreateTcpClient()
         {

@@ -41,9 +41,7 @@ namespace QuickCode.Core.Mvvm
         public void Append(string text)
         {            
             mBuilder.Append(text);
-
-            if (TextChanged != null)
-                TextChanged(this, null);
+            TextChanged?.Invoke(this, null);
 
             RaisePropertyChanged(() => Text);
         }
@@ -51,9 +49,7 @@ namespace QuickCode.Core.Mvvm
         public void AppendLine(string text)
         {
             mBuilder.AppendLine(text);
-         
-            if (TextChanged != null)
-                TextChanged(this, null);
+            TextChanged?.Invoke(this, null);
 
             RaisePropertyChanged(() => Text);
         }
@@ -62,8 +58,7 @@ namespace QuickCode.Core.Mvvm
         {
             mBuilder.Clear();
 
-            if (TextChanged != null)
-                TextChanged(this, null);
+            TextChanged?.Invoke(this, null);
             RaisePropertyChanged(() => Text);
         }
 
