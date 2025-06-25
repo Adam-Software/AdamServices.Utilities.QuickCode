@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QuickCode.Services.Interfaces;
 using QuickCode.Services.Interfaces.RemotePythonRunnerServiceDependency.JsonModel;
+using SimpleUdp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,6 +27,7 @@ namespace QuickCode.Services
         #region Var
 
         private WatsonTcpClient mTcpClient;
+        private UdpEndpoint mUdpEndpoint;
         private bool mIsDisposing;
 
         #endregion
@@ -41,14 +43,13 @@ namespace QuickCode.Services
             Port = appSettingsMonitor.CurrentValue.ClientSettings.Port;
             
             mTcpClient = new WatsonTcpClient(Ip, Port);
+            mUdpEndpoint = new UdpEndpoint(Ip, Port);
 
             appSettingsMonitor.OnChange(OnChangeClientSettings);
             Subscribe();
 
             mLogger.LogInformation("Service run on {ip}:{port}", Ip, Port);
         }
-
-
 
         #endregion
 
@@ -60,7 +61,23 @@ namespace QuickCode.Services
             mTcpClient.Events.MessageReceived += MessageReceived;
             mTcpClient.Events.ExceptionEncountered += ExceptionEncountered;
             mTcpClient.Events.ServerDisconnected += ServerDisconnected;
+            //mTcpClient.Callbacks.SyncRequestReceivedAsync += SyncRequestReceivedAsync;
+
+            mUdpEndpoint.DatagramReceived += DatagramReceived;
         }
+
+        /*private async Task<SyncResponse> SyncRequestReceivedAsync(SyncRequest request)
+        {
+            await Task.Run(() =>
+            {
+                return new SyncResponse(request, string.Empty);
+            });
+            var message = System.Text.Encoding.UTF8.GetString(request.Data);
+            OnRaiseClientDataReceivedEvent(message);
+
+            return await Task.FromResult(new SyncResponse(request, string.Empty));
+            
+        }*/
 
         private void Unsubscribe()
         {
@@ -68,6 +85,7 @@ namespace QuickCode.Services
             mTcpClient.Events.MessageReceived -= MessageReceived;
             mTcpClient.Events.ExceptionEncountered -= ExceptionEncountered;
             mTcpClient.Events.ServerDisconnected -= ServerDisconnected;
+            //mTcpClient.Callbacks.SyncRequestReceivedAsync -= SyncRequestReceivedAsync;
         }
 
         #endregion
@@ -75,7 +93,7 @@ namespace QuickCode.Services
         #region Events
 
         private void ServerConnected(object sender, ConnectionEventArgs e)
-        {
+        {   
             IsConnected = true;
             ExitData = new();
 
@@ -85,7 +103,6 @@ namespace QuickCode.Services
         private void ServerDisconnected(object sender, DisconnectionEventArgs e)
         {
             IsConnected = false;
-
             mLogger.LogInformation("Client disconected");
         }
 
@@ -115,21 +132,16 @@ namespace QuickCode.Services
         private void MessageReceived(object sender, MessageReceivedEventArgs e)
         {
             if (e.Metadata != null)
-                MetadataReceived(e.Metadata);
+                MetadataReceived(e.Metadata); 
+        }
 
-            try
-            {
-                var message = System.Text.Encoding.UTF8.GetString(e.Data);
-                OnRaiseClientDataReceivedEvent(message);
-            }
-            catch (Exception ex) 
-            {
-                mLogger.LogError("MessageReceived {error}", ex);
-            }   
+        private void DatagramReceived(object sender, Datagram e)
+        {
+            var message = System.Text.Encoding.UTF8.GetString(e.Data);
+            OnRaiseClientDataReceivedEvent(message);
         }
 
         private ExitData mExitdata = new();
-
         public ExitData ExitData
         {
             get { return mExitdata; }
@@ -274,12 +286,11 @@ namespace QuickCode.Services
                 return;
             }
 
-            var exit = new Dictionary<string, object>() { { "exit", "" } };
+            var exitMetadata = new Dictionary<string, object>() { { "exit", "" } };
 
             try
             {
-                await mTcpClient.SendAsync("", exit);
-                //mTcpClient.Disconnect(true);
+                await mTcpClient.SendAsync("", exitMetadata);
             }
             catch (InvalidOperationException)
             {
@@ -319,34 +330,6 @@ namespace QuickCode.Services
 
                 mIsDisposing = true;
             }
-        }
-
-        private void ConnectAsync()
-        {
-            //return Task.Run(() =>
-            //{
-                try
-                {
-                    mTcpClient.Connect();
-                }
-                catch (TimeoutException ex)
-                {
-                    mLogger.LogError("{error}", ex.Message);
-                    mLogger.LogError("Remote python service unaviable");
-                    return;
-                }
-                catch (SocketException ex)
-                {
-                    mLogger.LogError("{error}", ex.Message);
-                    mLogger.LogError("Socket exception because remote python service unaviable");
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    mLogger.LogError("{error}", ex.Message);
-                    return;
-                }
-            //});
         }
 
         private void RecreateTcpClient()
