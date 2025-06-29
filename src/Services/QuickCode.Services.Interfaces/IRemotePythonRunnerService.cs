@@ -1,4 +1,5 @@
-﻿using QuickCode.Services.Interfaces.RemotePythonRunnerServiceDependency.JsonModel;
+﻿using QuickCode.Services.Interfaces.RemotePythonRunnerServiceDependency.CustomCollection;
+using QuickCode.Services.Interfaces.RemotePythonRunnerServiceDependency.JsonModel;
 using System;
 using System.Threading.Tasks;
 
@@ -12,8 +13,11 @@ namespace QuickCode.Services.Interfaces
 
     public interface IRemotePythonRunnerService : IDisposable
     {
-        public event DataReceivedEventHandler RaiseDataReceivedEvent;
+        //public event DataReceivedEventHandler RaiseDataReceivedEvent;
+
         public event IsConnectedChangeEventHandler RaiseIsConnectedChangeEvent;
+
+        public EventQueue<string> EventQueue { get; }
         public Task SendСontrolCharacter(string controlCharacter);
         public Task ConnectAndSendCodeAsync(string sourceCode, bool withDebug = false);
         public Task DisconnectAsync(bool withDebug = false);

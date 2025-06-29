@@ -52,13 +52,16 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
 
         private void Subscribe()
         {
-            mRemotePythonRunner.RaiseDataReceivedEvent += RaiseDataReceivedEvent;
+            //mRemotePythonRunner.RaiseDataReceivedEvent += RaiseDataReceivedEvent;
             mRemotePythonRunner.RaiseIsConnectedChangeEvent += RaiseIsConnectedChangeEvent;
+            mRemotePythonRunner.EventQueue.Enqueued += EventQueue_Enqueued;
         }
+
 
         private void Unsubscribe()
         {
-            mRemotePythonRunner.RaiseDataReceivedEvent -= RaiseDataReceivedEvent;
+            //mRemotePythonRunner.RaiseDataReceivedEvent -= RaiseDataReceivedEvent;
+            mRemotePythonRunner.EventQueue.Enqueued -= EventQueue_Enqueued;
             mRemotePythonRunner.RaiseIsConnectedChangeEvent -= RaiseIsConnectedChangeEvent;
         }
 
@@ -69,6 +72,13 @@ namespace QuickCode.Modules.ContentRegion.ViewModels
         #endregion
 
         #region Events
+
+        private void EventQueue_Enqueued(object sender, EventArgs e)
+        {
+            var message = mRemotePythonRunner.EventQueue.Dequeue();
+            UpdateExecutionResultBackground(message);
+        }
+
 
         private void RaiseDataReceivedEvent(object sender, string data)
         {

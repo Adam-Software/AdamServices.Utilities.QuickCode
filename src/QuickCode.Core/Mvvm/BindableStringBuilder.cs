@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using System.Text;
@@ -20,6 +21,7 @@ namespace QuickCode.Core.Mvvm
         #region Var
 
         private readonly StringBuilder mBuilder = new();
+       
 
         #endregion
 

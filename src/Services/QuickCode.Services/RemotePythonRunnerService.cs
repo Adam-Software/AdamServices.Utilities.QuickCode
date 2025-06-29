@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using QuickCode.Services.Interfaces;
+using QuickCode.Services.Interfaces.RemotePythonRunnerServiceDependency.CustomCollection;
 using QuickCode.Services.Interfaces.RemotePythonRunnerServiceDependency.JsonModel;
 using SimpleUdp;
 using System;
@@ -15,9 +16,9 @@ namespace QuickCode.Services
 {
     public class RemotePythonRunnerService : IRemotePythonRunnerService
     {
-        public event DataReceivedEventHandler RaiseDataReceivedEvent;
+        //public event DataReceivedEventHandler RaiseDataReceivedEvent;
         public event IsConnectedChangeEventHandler RaiseIsConnectedChangeEvent;
-
+       
         #region Services
 
         private readonly ILogger<RemotePythonRunnerService> mLogger;
@@ -48,7 +49,10 @@ namespace QuickCode.Services
             appSettingsMonitor.OnChange(OnChangeClientSettings);
             Subscribe();
 
+            EventQueue = new EventQueue<string>();
+
             mLogger.LogInformation("Service run on {ip}:{port}", Ip, Port);
+            
         }
 
         #endregion
@@ -61,6 +65,7 @@ namespace QuickCode.Services
             mTcpClient.Events.MessageReceived += MessageReceived;
             mTcpClient.Events.ExceptionEncountered += ExceptionEncountered;
             mTcpClient.Events.ServerDisconnected += ServerDisconnected;
+            //EventQueue.Enqueued += Enqueued;
             //mTcpClient.Callbacks.SyncRequestReceivedAsync += SyncRequestReceivedAsync;
 
             mUdpEndpoint.DatagramReceived += DatagramReceived;
@@ -86,6 +91,7 @@ namespace QuickCode.Services
             mTcpClient.Events.ExceptionEncountered -= ExceptionEncountered;
             mTcpClient.Events.ServerDisconnected -= ServerDisconnected;
             //mTcpClient.Callbacks.SyncRequestReceivedAsync -= SyncRequestReceivedAsync;
+            //EventQueue.Enqueued += Enqueued;
         }
 
         #endregion
@@ -102,6 +108,7 @@ namespace QuickCode.Services
 
         private void ServerDisconnected(object sender, DisconnectionEventArgs e)
         {
+            EventQueue.Clear();
             IsConnected = false;
             mLogger.LogInformation("Client disconected");
         }
@@ -135,11 +142,19 @@ namespace QuickCode.Services
                 MetadataReceived(e.Metadata); 
         }
 
+       
+
         private void DatagramReceived(object sender, Datagram e)
         {
             var message = System.Text.Encoding.UTF8.GetString(e.Data);
-            OnRaiseClientDataReceivedEvent(message);
+            EventQueue.Enqueue(message);
+            //OnRaiseClientDataReceivedEvent(message);
         }
+
+        /*private void Enqueued(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }*/
 
         private ExitData mExitdata = new();
         public ExitData ExitData
@@ -178,6 +193,8 @@ namespace QuickCode.Services
         #endregion
 
         #region Public fields
+
+        public EventQueue<string> EventQueue { get; } 
 
         private string mIp = string.Empty;
         public string Ip 
@@ -359,12 +376,12 @@ namespace QuickCode.Services
 
         #region RaiseEvent
 
-        protected virtual void OnRaiseClientDataReceivedEvent(string data)
+        /*protected virtual void OnRaiseClientDataReceivedEvent(string data)
         {
             var raiseEvent = RaiseDataReceivedEvent;
             raiseEvent?.Invoke(this, data);
 
-        }
+        }*/
 
         protected virtual void OnIsConnectedChangeEvent()
         {
